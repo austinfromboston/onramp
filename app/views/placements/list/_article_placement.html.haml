@@ -1,0 +1,5 @@
+%li
+  %h2
+    = placement.article.name
+  - form_for placement do |f|
+    = f.hidden_field :list_order, :size => 2

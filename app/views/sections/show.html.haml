@@ -1,0 +1,9 @@
+%h1
+  = @section.name
+.menu
+  = render :partial => 'sections/menu', :locals => { :section => @section }
+
+%ul.plain{ :id => "section_#{@section.id}_show" }
+  - for placement in @section.placements
+    %li
+      = render :partial => 'placements/list/article', :object => placement.article, :locals => {:placement => placement }

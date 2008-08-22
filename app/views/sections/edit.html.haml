@@ -1,0 +1,22 @@
+- form_for @section do |f|
+  = render :partial => 'form', :locals => { :f => f }
+  %p.submit
+    = f.submit "Update"
+
+- unless @section.placements.empty?
+  %ul#section_placements.plain
+    - for placement in @section.placements
+      = render :partial => 'sections/list/placement', :locals => { :placement => placement }
+
+= link_to "new", new_section_article_path(:section_id => @section ), :class => 'add button'
+= link_to "add", new_section_placement_path(:section_id => @section ), :class => 'add button'
+
+- content_for :dom_ready do
+  :plain
+    $('#section_placements').sortable({ 
+      update: function(ev) { 
+        //var n = 0;
+        console.log( $('li[data-id]', this).map( function() { return $(this).attr('data-id'); } ));
+      }
+    });
+  

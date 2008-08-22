@@ -1,0 +1,5 @@
+%h2
+  = link_to article.title, article_path(article)
+.menu
+  = render :partial => 'articles/menu', :locals => { :article => article }
+= article.blurb

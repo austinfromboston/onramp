@@ -1,0 +1,9 @@
+= render :partial => 'articles/menu', :locals => { :article => @article }
+%h1.title
+  = @article.title
+- if @article.subtitle
+  %h2.subtitle
+    = @article.subtitle
+
+.body
+  = article_body @article

@@ -1,0 +1,30 @@
+%p
+  = f.label :title
+  = f.text_field :title, :class => 'long title'
+%p
+  = f.label :subtitle
+  = f.text_field :subtitle, :class => 'long'
+%p
+  = f.label :blurb, "Summary for lists"
+  = f.text_area :blurb, :class => 'minor'
+%p
+  = f.label :body
+  = f.text_area :body, :class => 'fullpage'
+
+%h3 Sections
+- section_options.each do |(section_name, section_id)|
+  = check_box_tag "article[section_ids][]", section_id, f.object.section_ids.include?( section_id ), :id => "article_section_ids_#{section_id}"
+  %label{ :for => "article_section_ids_#{section_id}", :class => 'inline' }
+    = section_name
+
+%p
+  = f.label :status
+  = f.select :status, Article::STATUSES
+
+%p
+  = f.label :metakeywords
+  = f.text_area :metakeywords, :class => 'minor'
+%p
+  = f.label :metadescription
+  = f.text_area :metadescription, :class => 'minor'
+  

@@ -1,0 +1,5 @@
+- form_for @article do |f|
+  = render :partial => 'form', :locals => { :f => f }
+  %p.submit
+    = f.submit "Update"
+

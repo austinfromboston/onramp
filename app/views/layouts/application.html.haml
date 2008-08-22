@@ -1,0 +1,30 @@
+!!!
+%head
+  %title
+    = controller.controller_name.titleize
+    &mdash;
+    = controller.action_name.titleize
+  = stylesheet_link_tag 'print', :media => 'print'
+  = stylesheet_link_tag 'screen', :media => 'screen, projection'
+  <!--[if IE]>
+  = stylesheet_link_tag 'ie'
+  <![endif]-->
+  = stylesheet_link_tag 'application'
+  = stylesheet_link_tag 'forms'
+  = stylesheet_link_tag 'ui'
+
+%body{ :class => "#{controller.controller_name} #{controller.action_name}" }
+  #container.span-24
+    #header
+      = render 'layouts/menu'
+    #body
+      = yield
+    #footer
+
+  = javascript_include_tag 'jquery/jquery-1.2.6.js'
+  = javascript_include_tag js_ui(:core)
+  = javascript_include_tag js_ui(:sortable)
+  - javascript_tag do
+    $( function() {
+    = yield :dom_ready
+    } );

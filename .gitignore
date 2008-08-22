@@ -1,0 +1,9 @@
+.DS_Store
+public/stylesheets/application.css
+public/stylesheets/ui.css
+public/stylesheets/forms.css
+db/*sqlite3
+log
+tmp
+config/database.yml
+config/mongrel_cluster.yml
