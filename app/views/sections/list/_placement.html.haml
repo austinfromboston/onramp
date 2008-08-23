@@ -1,4 +1,4 @@
-%li{ :'data-id' => placement.id }
+%li{ :id => "placement_ids_#{placement.id}", :'data-article-id' => placement.article_id }
   %h2
     = placement.name
   -# form_for placement do |f|

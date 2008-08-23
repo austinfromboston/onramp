@@ -4,19 +4,89 @@
     = f.submit "Update"
 
 - unless @section.placements.empty?
-  %ul#section_placements.plain
-    - for placement in @section.placements
+  - ordered, unordered = @section.placements.partition { |p| p.list_order }
+
+  %h6.info
+    Top Items
+  .clear
+  %ol#top_items.plain.section_placements
+    - for placement in ordered
       = render :partial => 'sections/list/placement', :locals => { :placement => placement }
 
-= link_to "new", new_section_article_path(:section_id => @section ), :class => 'add button'
-= link_to "add", new_section_placement_path(:section_id => @section ), :class => 'add button'
+  %h6.info
+    Recent Items
+  .clear
+  %ul#recent_items.plain.section_placements
+    - for placement in unordered
+      = render :partial => 'sections/list/placement', :locals => { :placement => placement }
+
+-#= link_to "new", new_section_article_path(:section_id => @section ), :class => 'add button'
+
+%h6.info
+  Add
+.clear
+.new.section_placements
+  - form_for Placement.new( :section => @section ) do |f|
+    = f.select "article_id", article_options( :exclude_section => @section ), {}, :id => 'add_article_select'
+    = f.hidden_field "section_id"
+    = f.submit "Add", :id => 'add_article_button'
+  = link_to "add", new_section_placement_path(:section_id => @section ), :class => 'add button'
+
+
+- unless @section.placements.empty?
+  %h6#remove_title.info
+    Remove
+  .clear
+  %ul#remove_items.plain.section_placements
+
 
 - content_for :dom_ready do
+  = "var auth_token = '#{form_authenticity_token}'"
   :plain
-    $('#section_placements').sortable({ 
+    var success_message = function(response) { RD.notify("success"); };
+    $('#add_article_button').click( function(ev) {
+      var form = $(ev.target.form);
+      var added_article = $( '#add_article_select option:selected').eq(0);
+      console.log(added_article);
+      if ( form === undefined ) return true;
+      $.post( form.attr('action') + '.js', form.serialize(), function( response ) { 
+        console.log( response.placement.id );
+        $('#recent_items').append( $('<li id="placement_ids_' + response.placement.id + '"></li>').append($('<h2></h2>').text( added_article.text() )));
+        added_article.remove();
+        success_message;
+      }, 'json' );
+      return false;
+    } );
+    
+    //Update Top Items
+    $('#top_items').sortable({ 
       update: function(ev) { 
-        //var n = 0;
-        console.log( $('li[data-id]', this).map( function() { return $(this).attr('data-id'); } ));
+        $.post( '/placement_orderings', '_method=put&authenticity_token=' + auth_token + '&' + $('#top_items').sortable( 'serialize' ), success_message);
+      },
+      connectWith: [ "#recent_items", '#remove_items' ]
+    });
+
+    //Update Recent Items
+    $('#recent_items').sortable( { 
+      connectWith: [ '#top_items', '#remove_items' ], 
+      update: function(ev) { 
+        $.post( '/placement_orderings', '_method=delete&authenticity_token=' + auth_token + '&' + $('#recent_items').sortable( 'serialize' ), success_message );
+      }
+    } );
+
+    //Deletion
+    $('#remove_items').sortable( { 
+      connectWith: [ '#top_items', '#recent_items' ], 
+      update: function(ev) { 
+        
+        $('#remove_title').addClass('busy');
+        $.post( ('/placements/' + $('#remove_items li').attr('id').replace('placement_ids_', '')), '_method=delete&authenticity_token=' + auth_token, function(result) {
+          $('#remove_items li').hide('puff', {}, 300, function() { 
+            $('#add_article_select').append( $( '<option></option>' ).val( $(this).attr('data-article-id') ).text( $(this).text() ) );
+            $(this).remove(); 
+          } );
+          $('#remove_title').removeClass('busy');
+        } );
       }
     });
   

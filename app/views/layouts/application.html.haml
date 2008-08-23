@@ -17,6 +17,7 @@
   #container.span-24
     #header
       = render 'layouts/menu'
+      #ajax_message
     #body
       = yield
     #footer
@@ -24,7 +25,11 @@
   = javascript_include_tag 'jquery/jquery-1.2.6.js'
   = javascript_include_tag js_ui(:core)
   = javascript_include_tag js_ui(:sortable)
+  = javascript_include_tag js_effect(:core)
+  = javascript_include_tag js_effect(:scale) #used for puff
+  = javascript_include_tag 'application'
   - javascript_tag do
     $( function() {
+    $( '.js-hidden' ).removeClass('js-hidden');
     = yield :dom_ready
     } );

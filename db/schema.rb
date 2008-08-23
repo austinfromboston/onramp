@@ -36,14 +36,18 @@ ActiveRecord::Schema.define(:version => 20080815151431) do
   end
 
   create_table "placements", :force => true do |t|
-    t.integer "article_id"
-    t.integer "section_id"
-    t.integer "order"
+    t.integer  "article_id"
+    t.integer  "section_id"
+    t.integer  "list_order"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "sections", :force => true do |t|
-    t.string  "name"
-    t.integer "header_id"
+    t.string   "name"
+    t.integer  "header_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
 end

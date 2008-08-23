@@ -4,11 +4,18 @@ module ApplicationHelper
     Section.all.map { |s| [ s.name, s.id ] }
   end
 
-  def article_options
-    Article.all.map { |a| [ a.name, a.id ] }
+  def article_options( options = {} )
+    items = Article.all
+    if(options[:exclude_section])
+      items = items - Section.find( options[:exclude_section] ).articles
+    end
+    items.map { |a| [ a.name, a.id ] }
   end
 
   def js_ui(library_name)
     "jquery/jquery.ui-1.5.1/ui/ui.#{library_name}.js"
+  end
+  def js_effect(library_name)
+    "jquery/jquery.ui-1.5.1/ui/effects.#{library_name}.js"
   end
 end
