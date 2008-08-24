@@ -4,10 +4,10 @@
     = controller.controller_name.titleize
     &mdash;
     = controller.action_name.titleize
-  = stylesheet_link_tag 'print', :media => 'print'
-  = stylesheet_link_tag 'screen', :media => 'screen, projection'
+  = stylesheet_link_tag 'blueprint/print', :media => 'print'
+  = stylesheet_link_tag 'blueprint/screen', :media => 'screen, projection'
   <!--[if IE]>
-  = stylesheet_link_tag 'ie'
+  = stylesheet_link_tag 'blueprint/ie'
   <![endif]-->
   = stylesheet_link_tag 'application'
   = stylesheet_link_tag 'forms'
@@ -15,18 +15,21 @@
 
 %body{ :class => "#{controller.controller_name} #{controller.action_name}" }
   #container.span-24
-    #header
+    #header.container
       = render 'layouts/menu'
       #ajax_message
-    #body
+    #main.container
       = yield
-    #footer
+    #footer.container
 
   = javascript_include_tag 'jquery/jquery-1.2.6.js'
   = javascript_include_tag js_ui(:core)
   = javascript_include_tag js_ui(:sortable)
   = javascript_include_tag js_effect(:core)
-  = javascript_include_tag js_effect(:scale) #used for puff
+  = javascript_include_tag js_effect(:scale)
+  = javascript_include_tag js_effect(:shake)
+  = javascript_include_tag js_effect(:highlight)
+  = javascript_include_tag js_effect(:transfer)
   = javascript_include_tag 'application'
   - javascript_tag do
     $( function() {

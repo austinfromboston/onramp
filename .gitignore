@@ -1,7 +1,5 @@
 .DS_Store
-public/stylesheets/application.css
-public/stylesheets/ui.css
-public/stylesheets/forms.css
+public/stylesheets/*.css
 db/*.sqlite3
 log
 tmp

@@ -19,4 +19,11 @@ class Article < ActiveRecord::Base
     title
   end
 
+  attr_accessor :new_placement_section_id
+  after_save :create_new_placement
+  def create_new_placement
+    return true unless new_placement_section_id
+    placements.create :section_id => new_placement_section_id
+  end
+
 end

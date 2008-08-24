@@ -3,89 +3,143 @@
   %p.submit
     = f.submit "Update"
 
-- unless @section.placements.empty?
+#section-content.container
   - ordered, unordered = @section.placements.partition { |p| p.list_order }
+  .span-15
 
-  %h6.info
-    Top Items
-  .clear
-  %ol#top_items.plain.section_placements
-    - for placement in ordered
-      = render :partial => 'sections/list/placement', :locals => { :placement => placement }
+    %ol#top-items.plain.section_placements
+      %h6.info
+        Top Items
+      .clear
+      - if ordered and !ordered.empty?
+        - for placement in ordered
+          = render :partial => 'sections/list/placement', :locals => { :placement => placement }
 
-  %h6.info
-    Recent Items
-  .clear
-  %ul#recent_items.plain.section_placements
-    - for placement in unordered
-      = render :partial => 'sections/list/placement', :locals => { :placement => placement }
+    %ul#recent-items.plain.section_placements
+      %h6.info
+        Recent Items
+      .clear
+      - if unordered and !unordered.empty?
+        - for placement in unordered
+          = render :partial => 'sections/list/placement', :locals => { :placement => placement }
 
--#= link_to "new", new_section_article_path(:section_id => @section ), :class => 'add button'
+  -#= link_to "new", new_section_article_path(:section_id => @section ), :class => 'add button'
 
-%h6.info
-  Add
-.clear
-.new.section_placements
-  - form_for Placement.new( :section => @section ) do |f|
-    = f.select "article_id", article_options( :exclude_section => @section ), {}, :id => 'add_article_select'
-    = f.hidden_field "section_id"
-    = f.submit "Add", :id => 'add_article_button'
-  = link_to "add", new_section_placement_path(:section_id => @section ), :class => 'add button'
+  .span-5
+    .new.section_placements
+      %h6.info
+        Add
+      .clear
+      - form_for Placement.new( :section => @section ) do |f|
+        = f.select "article_id", article_options( :exclude_section => @section ), {}, :id => 'add_article_select'
+        = f.hidden_field "section_id"
+        = f.submit "Add", :id => 'add_article_button'
 
+      = link_to "new article", new_article_path(:section_id => @section ), :class => 'add button remote', :'data-target' => 'article-canvas'
+  .span-3
+    - unless @section.placements.empty?
+      %ul#remove-items.plain.section_placements
+        %h6#remove-title.info
+          Remove
+        .clear
 
-- unless @section.placements.empty?
-  %h6#remove_title.info
-    Remove
-  .clear
-  %ul#remove_items.plain.section_placements
+  .span-8
+    #article-canvas.simple.thin
+      .section_placements
+        %h6#new-title.info
+          Edit
+        .clear
+        - form_for Article.new( :new_placement_section_id => @section.id ) do |f|
+          = render :partial => 'articles/form', :locals => { :f => f }
+          = f.hidden_field :new_placement_section_id
+          %p.submit
+            = f.submit "Create", :id => 'create_article_button'
+
 
 
 - content_for :dom_ready do
   = "var auth_token = '#{form_authenticity_token}'"
   :plain
     var success_message = function(response) { RD.notify("success"); };
+    //Create a new Article
+    $('#create_article_button').click( function(ev) {
+      var form = $(ev.target.form);
+      $.post( form.attr('action') + '.js', form.serialize(), function( response ) { 
+        $('#recent-items').append( $('<li id="placement_ids_' + response.article.placements[0].id + '" data-article-id="'+response.article.id+'" class="peeking"></li>').append($('<h2></h2>').text( response.article.title )));
+        var new_article = $('#recent-items li:last' );
+        form.effect('transfer', { to: new_article, className:'shadow' }, 300, function() {
+          new_article.removeClass('peeking', 500 );
+          $(':text:visible, textearea:visible', form).val('');
+          success_message();  
+        } );
+      }, 'json');
+      return false;
+    });
+
+    //Add a new Placemnt for an existing article
     $('#add_article_button').click( function(ev) {
       var form = $(ev.target.form);
       var added_article = $( '#add_article_select option:selected').eq(0);
-      console.log(added_article);
       if ( form === undefined ) return true;
       $.post( form.attr('action') + '.js', form.serialize(), function( response ) { 
-        console.log( response.placement.id );
-        $('#recent_items').append( $('<li id="placement_ids_' + response.placement.id + '"></li>').append($('<h2></h2>').text( added_article.text() )));
-        added_article.remove();
-        success_message;
+        $('#recent-items').append( $('<li id="placement_ids_' + response.placement.id + '" data-article-id="'+added_article.val()+'" class="peeking"></li>').append($('<h2></h2>').text( added_article.text() )));
+        //$('#recent-items').append( $('<li id="placement_ids_' + response.placement.id + '" data-article-id="'+added_article.val()+'"></li>').append($('<h2></h2>').text( added_article.text() )));
+        added_article.parents( 'form' ).effect('transfer', { to: $('#recent-items li:last'), className: 'shadow' }, 300, function() {
+          $('#recent-items li:last').removeClass('peeking', 500 );
+          added_article.remove();
+          success_message();
+        } );
       }, 'json' );
       return false;
     } );
     
     //Update Top Items
-    $('#top_items').sortable({ 
+    $('#top-items').sortable({ 
+      tolerance: 'intersect',
+      placeholder: 'shadow',
+      opacity: .7,
+      over: function( ev ) { $(ev.target).addClass('drop-allowed'); },
+      //out: function( ev ) { $(ev.target).removeClass('drop-allowed'); },
+      items: '> li',
+      containment: '#section-content',
       update: function(ev) { 
-        $.post( '/placement_orderings', '_method=put&authenticity_token=' + auth_token + '&' + $('#top_items').sortable( 'serialize' ), success_message);
+        $('.drop-allowed').removeClass('drop-allowed');
+        $.post( '/placement_orderings', '_method=put&authenticity_token=' + auth_token + '&' + $('#top-items').sortable( 'serialize' ), success_message);
       },
-      connectWith: [ "#recent_items", '#remove_items' ]
+      connectWith: [ "#recent-items", '#remove-items' ]
     });
 
     //Update Recent Items
-    $('#recent_items').sortable( { 
-      connectWith: [ '#top_items', '#remove_items' ], 
+    $('#recent-items').sortable( { 
+      over: function( ev ) { $(ev.target).addClass('drop-allowed'); },
+      out: function( ev ) { $(ev.target).removeClass('drop-allowed'); },
+      placeholder: 'shadow',
+      items: '> li',
+      containment: '#section-content',
+      connectWith: [ '#top-items', '#remove-items' ], 
       update: function(ev) { 
-        $.post( '/placement_orderings', '_method=delete&authenticity_token=' + auth_token + '&' + $('#recent_items').sortable( 'serialize' ), success_message );
+        $('.drop-allowed').removeClass('drop-allowed'); 
+        $.post( '/placement_orderings', '_method=delete&authenticity_token=' + auth_token + '&' + $('#recent-items').sortable( 'serialize' ), success_message );
       }
     } );
 
     //Deletion
-    $('#remove_items').sortable( { 
-      connectWith: [ '#top_items', '#recent_items' ], 
+    $('#remove-items').sortable( { 
+      over: function( ev ) { $(ev.target).addClass('drop-allowed'); },
+      out: function( ev ) { $(ev.target).removeClass('drop-allowed'); },
+      placeholder: 'warning',
+      items: '> li',
+      connectWith: [ '#top-items', '#recent-items' ], 
       update: function(ev) { 
         
-        $('#remove_title').addClass('busy');
-        $.post( ('/placements/' + $('#remove_items li').attr('id').replace('placement_ids_', '')), '_method=delete&authenticity_token=' + auth_token, function(result) {
-          $('#remove_items li').hide('puff', {}, 300, function() { 
+        $('#remove-title').addClass('busy');
+        $.post( ('/placements/' + $('#remove-items li').attr('id').replace('placement_ids_', '')), '_method=delete&authenticity_token=' + auth_token, function(result) {
+          $('#remove-items').effect('shake', { distance: 2, times: 1 }, 200);
+          $('#remove-items li').effect('scale', { percent: 30 }, 300, function() { 
             $('#add_article_select').append( $( '<option></option>' ).val( $(this).attr('data-article-id') ).text( $(this).text() ) );
             $(this).remove(); 
           } );
-          $('#remove_title').removeClass('busy');
+          $('#remove-title').removeClass('busy');
         } );
       }
     });
