@@ -4,6 +4,7 @@
     = f.submit "Update"
 
 #section-content.container
+  .add-article-inset.container
   - ordered, unordered = @section.placements.partition { |p| p.list_order }
   .span-15
 
@@ -96,14 +97,11 @@
     //Update Top Items
     $('#top-items').sortable({ 
       tolerance: 'intersect',
-      placeholder: 'shadow',
+      placeholder: 'shadow-droppable',
       opacity: .7,
-      over: function( ev ) { $(ev.target).addClass('drop-allowed'); },
-      //out: function( ev ) { $(ev.target).removeClass('drop-allowed'); },
       items: '> li',
       containment: '#section-content',
       update: function(ev) { 
-        $('.drop-allowed').removeClass('drop-allowed');
         $.post( '/placement_orderings', '_method=put&authenticity_token=' + auth_token + '&' + $('#top-items').sortable( 'serialize' ), success_message);
       },
       connectWith: [ "#recent-items", '#remove-items' ]
@@ -111,25 +109,20 @@
 
     //Update Recent Items
     $('#recent-items').sortable( { 
-      over: function( ev ) { $(ev.target).addClass('drop-allowed'); },
-      out: function( ev ) { $(ev.target).removeClass('drop-allowed'); },
-      placeholder: 'shadow',
+      placeholder: 'shadow-droppable',
       items: '> li',
       containment: '#section-content',
       connectWith: [ '#top-items', '#remove-items' ], 
       update: function(ev) { 
-        $('.drop-allowed').removeClass('drop-allowed'); 
         $.post( '/placement_orderings', '_method=delete&authenticity_token=' + auth_token + '&' + $('#recent-items').sortable( 'serialize' ), success_message );
       }
     } );
 
     //Deletion
     $('#remove-items').sortable( { 
-      over: function( ev ) { $(ev.target).addClass('drop-allowed'); },
-      out: function( ev ) { $(ev.target).removeClass('drop-allowed'); },
-      placeholder: 'warning',
       items: '> li',
       connectWith: [ '#top-items', '#recent-items' ], 
+      placeholder: 'shadow',
       update: function(ev) { 
         
         $('#remove-title').addClass('busy');

@@ -2,21 +2,36 @@ class Article < ActiveRecord::Base
   has_many :placements
   has_many :sections, :through => :placements
 
-  before_save :reconcile_body
+  #before_save :reconcile_body
 
   STATUSES = %w/ draft published /
 
-  def reconcile_body
-    if changed.include? 'body'
-      self.body_html = nil 
-    elsif changed.include? 'body_html'
-      self.body = nil 
-    end
-    true
+  def body=(value)
+    write_attribute :body_html, format_body(value) 
+    super value
+  end
+
+  def body_html=(value)
+    write_attribute :body, remove_format(value)
+    super value
+  end 
+
+  def format_body(value)
+    ActionView::Base.new.simple_format( value )
+  end
+  def remove_format(value)
+    value.gsub(/<\/?[^>]*>/, "")
   end
 
   def name 
     title
+  end
+
+  def escaped_body_html
+    ActionView::Base.new.escape_once( body_html )
+  end
+  def escaped_body_html=(value)
+    self.body_html = CGI.unescapeHTML(value)
   end
 
   attr_accessor :new_placement_section_id

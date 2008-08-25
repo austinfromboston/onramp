@@ -1,5 +1,17 @@
 %li{ :id => "placement_ids_#{placement.id}", :'data-article-id' => placement.article_id }
   %h2
     = placement.name
+  .date
+  - if placement.article.published_at
+    Published:
+    = placement.article.published_at.strftime('%Y-%m-%d') 
+  - else
+    Created:
+    = placement.article.created_at.strftime('%Y-%m-%d') 
+  .status
+    (
+    = placement.article.status
+    )
+  .edit-article-inset.container
   -# form_for placement do |f|
     = f.hidden_field :list_order, :size => 2

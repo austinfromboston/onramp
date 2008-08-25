@@ -30,7 +30,9 @@
   = javascript_include_tag js_effect(:shake)
   = javascript_include_tag js_effect(:highlight)
   = javascript_include_tag js_effect(:transfer)
+  = javascript_include_tag 'tiny_mce/tiny_mce'
   = javascript_include_tag 'application'
+  = yield :javascript
   - javascript_tag do
     $( function() {
     $( '.js-hidden' ).removeClass('js-hidden');

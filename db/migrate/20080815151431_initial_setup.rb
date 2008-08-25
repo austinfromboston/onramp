@@ -4,6 +4,7 @@ class InitialSetup < ActiveRecord::Migration
       t.string  'title',  'subtitle', 'display'
       t.text    'body',   'blurb', 'metakeywords', 'metadescription', 'body_html'
       t.string  'status', :size => 25
+      t.datetime   'published_at'
       t.timestamps
     end 
 

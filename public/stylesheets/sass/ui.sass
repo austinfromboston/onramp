@@ -39,26 +39,29 @@ body.edit .section_placements
   li
     :cursor move
     :cursor hand
-  .drop-allowed
-    :background-image url(/images/ui/droppable.gif)
-    :background-repeat no-repeat
-    :background-position 2px 10px
-    :padding-left 22px
+.shadow-droppable
+  :background-image url(/images/ui/droppable.gif)
+  :background-repeat no-repeat
+  :background-position 2px 10px
+
+.section_placements
+  > li
+    :margin-bottom 1em
+  h2
+    :margin-bottom 2px
+  .status
+    :display inline-block
     
 
 .bright
   :background-color red
   :border blue solid 1px
 
-.shadow
+.shadow, .shadow-droppable
   :background-color #ababab
   :border 3px solid #8e8e8e
   :opacity .6
 
-.warning
-  :background-color #22ffff
-  :border 3px solid #8e8e8e
-  :opacity .6
 
 .peeking
   :height 2px
@@ -69,3 +72,7 @@ body.edit .section_placements
   :background-image url(/images/ui/trash-standard.png)
   :background-repeat no-repeat
   :background-position 25px 20px 
+  .shadow
+    :background-color #ff2222
+    :border 3px solid #8e8e8e
+    :opacity .6
