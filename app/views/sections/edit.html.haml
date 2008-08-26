@@ -4,10 +4,10 @@
     = f.submit "Update"
 
 #section-content.container
-  .add-article-inset.container
-  - ordered, unordered = @section.placements.partition { |p| p.list_order }
-  .span-15
+  .span-17
+    .add-article-inset.container.simple
 
+    - ordered, unordered = @section.placements.partition { |p| p.list_order }
     %ol#top-items.plain.section_placements
       %h6.info
         Top Items
@@ -25,57 +25,59 @@
           = render :partial => 'sections/list/placement', :locals => { :placement => placement }
 
   -#= link_to "new", new_section_article_path(:section_id => @section ), :class => 'add button'
-
-  .span-5
-    .new.section_placements
-      %h6.info
-        Add
-      .clear
-      - form_for Placement.new( :section => @section ) do |f|
-        = f.select "article_id", article_options( :exclude_section => @section ), {}, :id => 'add_article_select'
-        = f.hidden_field "section_id"
-        = f.submit "Add", :id => 'add_article_button'
-
-      = link_to "new article", new_article_path(:section_id => @section ), :class => 'add button remote', :'data-target' => 'article-canvas'
-  .span-3
+  .span-6
     - unless @section.placements.empty?
       %ul#remove-items.plain.section_placements
         %h6#remove-title.info
           Remove
         .clear
 
-  .span-8
-    #article-canvas.simple.thin
-      .section_placements
-        %h6#new-title.info
-          Edit
-        .clear
-        - form_for Article.new( :new_placement_section_id => @section.id ) do |f|
-          = render :partial => 'articles/form', :locals => { :f => f }
-          = f.hidden_field :new_placement_section_id
-          %p.submit
-            = f.submit "Create", :id => 'create_article_button'
+    .new.section_placements
+      %h6.info
+        Add
+      .clear
+      - form_for @section.placements.build do |f|
+        = f.select "article_id", article_options( :exclude_section => @section ), {}, :id => 'add_article_select'
+        = f.hidden_field "section_id"
+        = f.submit "Add", :id => 'add_article_button'
+
+      = link_to "new article", new_article_path(:section_id => @section ), :class => 'add button remote', :'data-target' => '#section-content .add-article-inset', :id => 'add_article_link'
 
 
 
 - content_for :dom_ready do
   = "var auth_token = '#{form_authenticity_token}'"
+  = "var section = #{@section.to_json}.section;"
   :plain
     var success_message = function(response) { RD.notify("success"); };
     //Create a new Article
-    $('#create_article_button').click( function(ev) {
-      var form = $(ev.target.form);
-      $.post( form.attr('action') + '.js', form.serialize(), function( response ) { 
-        $('#recent-items').append( $('<li id="placement_ids_' + response.article.placements[0].id + '" data-article-id="'+response.article.id+'" class="peeking"></li>').append($('<h2></h2>').text( response.article.title )));
-        var new_article = $('#recent-items li:last' );
-        form.effect('transfer', { to: new_article, className:'shadow' }, 300, function() {
-          new_article.removeClass('peeking', 500 );
-          $(':text:visible, textearea:visible', form).val('');
-          success_message();  
+    $('#add_article_link').click( function(ev) {
+      var display = $(ev.target).attr('data-target');
+      $.get('/sections/' + section.id + '/articles/new', {}, function( response ) {
+        $(display).addClass('peeking').html( $('<h3></h3>').text('New Article')).append( response ).removeClass('peeking', 2500 ).find(':submit').click( function( ev ) {
+          var form = $(ev.target.form);
+          $.post( form.attr('action') + '.js', form.serialize(), function( response ) { 
+            $('#recent-items').append( $('<li id="placement_ids_' + response.article.placements[0].id + '" data-article-id="'+response.article.id+'" class="peeking"></li>').append($('<h2></h2>').text( response.article.title )));
+            $(display).addClass('peeking', 1500 ).hide('slow');
+
+            var new_article = $('#recent-items li:last' );
+            form.effect('transfer', { to: new_article, className:'shadow' }, 300, function() {
+              new_article.removeClass('peeking', 500 );
+              success_message();  
+            } );
+          }, 'json');
+          return false;
         } );
-      }, 'json');
+        
+        $('.submit .cancel', display ).click( function() { 
+          $( display ).addClass('peeking', 2000).html('')
+          window.setTimeout( function() { $(display).removeClass('peeking'); }, 3000 );
+          return false; 
+        } );
+      } );
+      window.location.hash="add_article"
       return false;
-    });
+    } );
 
     //Add a new Placemnt for an existing article
     $('#add_article_button').click( function(ev) {
@@ -84,7 +86,6 @@
       if ( form === undefined ) return true;
       $.post( form.attr('action') + '.js', form.serialize(), function( response ) { 
         $('#recent-items').append( $('<li id="placement_ids_' + response.placement.id + '" data-article-id="'+added_article.val()+'" class="peeking"></li>').append($('<h2></h2>').text( added_article.text() )));
-        //$('#recent-items').append( $('<li id="placement_ids_' + response.placement.id + '" data-article-id="'+added_article.val()+'"></li>').append($('<h2></h2>').text( added_article.text() )));
         added_article.parents( 'form' ).effect('transfer', { to: $('#recent-items li:last'), className: 'shadow' }, 300, function() {
           $('#recent-items li:last').removeClass('peeking', 500 );
           added_article.remove();
@@ -137,3 +138,33 @@
       }
     });
   
+    //remote edit form
+    $('.section_placements .remote_edit').each( function() {
+      var item = $(this).parents('li').eq(0);
+      var display = item.find('.edit-article-inset');
+      $(this).click( function() { 
+        $.get( '/articles/'+item.attr('data-article-id') +'/edit', {}, function( response ) {
+          display.show('slow').addClass('peeking');
+          display.html( $('<h3></h3>').text('Edit Article') ).append( response );
+          display.removeClass('peeking', 3000 );
+
+          // override form submit behavior
+          $(':submit', display ).click( function(ev) {
+            var form = $( ev.target.form );
+            $.post( form.attr('action') + '.js', form.serialize(), function( response ) { 
+              display.addClass('peeking', 1500).hide('slow');
+              $('h2:first', item ).text( response.article.title );
+            }, 'json' );
+            return false;
+          } );
+
+          // override form cancel behavior
+          $('.cancel', display ).click( function(ev) {
+            display.addClass('peeking', 1500).hide('slow').html('');
+            return false;
+          } );
+        } );
+        return false;
+      }) ;
+    } );
+    

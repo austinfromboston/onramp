@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(:version => 20080815151431) do
     t.string   "status"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.datetime "published_at"
   end
 
   create_table "images", :force => true do |t|

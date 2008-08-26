@@ -12,6 +12,11 @@
     (
     = placement.article.status
     )
-  .edit-article-inset.container
+  .js-only
+    (
+    = link_to "edit", article_path(placement.article), :class => "edit button remote_edit"
+    )
+  .edit-article-inset.simple.container
   -# form_for placement do |f|
     = f.hidden_field :list_order, :size => 2
+

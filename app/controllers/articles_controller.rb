@@ -5,6 +5,10 @@ class ArticlesController < ApplicationController
       format.html { redirect_to current_object }
       format.js { render :json => current_object.to_json(:include => :placements), :status => :created }
     end
+    response_for :update do |format|
+      format.html { redirect_to current_object }
+      format.js { render :json => current_object.to_json(:include => :placements), :status => :ok }
+    end
   end
 
   def current_object

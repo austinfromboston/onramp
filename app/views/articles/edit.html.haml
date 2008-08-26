@@ -2,4 +2,5 @@
   = render :partial => 'form', :locals => { :f => f }
   %p.submit
     = f.submit "Update"
+    = link_to "Cancel", article_path(@article), :class => 'cancel button'
 
