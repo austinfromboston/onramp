@@ -1,1 +1,9 @@
-%ul
+- top, recent = @placements.partition { |p| p.list_order }
+%ol#top-items
+  .content
+    - if top and !top.empty?
+      = render :partial => 'sections/list/placement', :collection => top 
+%ul#recent-items
+  .content
+    - if recent and !recent.empty?
+      = render :partial => 'sections/list/placement', :collection => recent 

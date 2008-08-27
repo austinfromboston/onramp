@@ -32,9 +32,10 @@
   = javascript_include_tag js_effect(:transfer)
   = javascript_include_tag 'tiny_mce/tiny_mce'
   = javascript_include_tag 'application'
+  = javascript_include_tag 'sections'
   = yield :javascript
   - javascript_tag do
     $( function() {
-    $( '.js-only' ).removeClass('js-only');
+    RD.ui.initialize();
     = yield :dom_ready
     } );

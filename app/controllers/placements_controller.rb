@@ -10,4 +10,12 @@ class PlacementsController < ApplicationController
   def current_object
     assign_section super 
   end
+
+  def current_objects
+    if params[:section_id]
+      Section.find(params[:section_id]).placements 
+    else
+      Placement.all
+    end
+  end
 end

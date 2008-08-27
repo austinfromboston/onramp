@@ -14,9 +14,12 @@
     )
   .js-only
     (
-    = link_to "edit", article_path(placement.article), :class => "edit button remote_edit"
+    = link_to "edit", edit_article_path(placement.article), :class => "edit button remote_edit"
     )
-  .edit-article-inset.simple.container
+  .edit-article-inset.simple.js-staging.ui-block
+    %h6.info Edit Article
+    .clear
+    .remote_content
   -# form_for placement do |f|
     = f.hidden_field :list_order, :size => 2
 

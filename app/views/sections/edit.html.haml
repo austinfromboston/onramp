@@ -5,34 +5,41 @@
 
 #section-content.container
   .span-17
-    .add-article-inset.container.simple
+    .add-article-inset.simple.span-17.ui-block.js-only.js-staging
+      .header.clear
+        %h6.info New Article
+      .remote_content
+    .clear
 
     - ordered, unordered = @section.placements.partition { |p| p.list_order }
-    %ol#top-items.plain.section_placements
+    %ol#top-items.plain.section_placements.ui-block
       %h6.info
         Top Items
       .clear
-      - if ordered and !ordered.empty?
-        - for placement in ordered
-          = render :partial => 'sections/list/placement', :locals => { :placement => placement }
+      .content
+        - if ordered and !ordered.empty?
+          - for placement in ordered
+            = render :partial => 'sections/list/placement', :locals => { :placement => placement }
 
-    %ul#recent-items.plain.section_placements
+    %ul#recent-items.plain.section_placements.ui-block
       %h6.info
         Recent Items
       .clear
-      - if unordered and !unordered.empty?
-        - for placement in unordered
-          = render :partial => 'sections/list/placement', :locals => { :placement => placement }
-
+      .content
+        - if unordered and !unordered.empty?
+          - for placement in unordered
+            = render :partial => 'sections/list/placement', :locals => { :placement => placement }
+    
   -#= link_to "new", new_section_article_path(:section_id => @section ), :class => 'add button'
-  .span-6
+  .span-3.prepend-3
     - unless @section.placements.empty?
-      %ul#remove-items.plain.section_placements
+      %ul#remove-items.plain.ui-block
         %h6#remove-title.info
           Remove
         .clear
 
-    .new.section_placements
+  .span-6
+    .new.section_placements.ui-block
       %h6.info
         Add
       .clear
@@ -41,11 +48,28 @@
         = f.hidden_field "section_id"
         = f.submit "Add", :id => 'add_article_button'
 
-      = link_to "new article", new_article_path(:section_id => @section ), :class => 'add button remote', :'data-target' => '#section-content .add-article-inset', :id => 'add_article_link'
+      = link_to "new article", new_section_article_path(:section_id => @section ), :class => 'add button remote_add', :'data-target' => '#section-content .add-article-inset', :id => 'add_article_link'
 
-
+  #remote-staging.js-only.js-staging
 
 - content_for :dom_ready do
+  = "var auth_token = '#{form_authenticity_token}'"
+  = "RD.section = #{@section.to_json}.section;"
+  :plain
+    var success_message = function(response) { RD.notify("success"); };
+    //Create a new Article
+    $('#section-content').click(  function(ev) {
+      if( $(ev.target).is('.remote_add')) { 
+        RD.articles.add(ev);
+        return false; 
+      }
+      if( $(ev.target).is('.remote_edit')) { 
+        RD.articles.edit(ev);
+        return false;
+      }
+    } );
+
+-# content_for :dom_ready do
   = "var auth_token = '#{form_authenticity_token}'"
   = "var section = #{@section.to_json}.section;"
   :plain
@@ -58,7 +82,7 @@
           var form = $(ev.target.form);
           $.post( form.attr('action') + '.js', form.serialize(), function( response ) { 
             $('#recent-items').append( $('<li id="placement_ids_' + response.article.placements[0].id + '" data-article-id="'+response.article.id+'" class="peeking"></li>').append($('<h2></h2>').text( response.article.title )));
-            $(display).addClass('peeking', 1500 ).hide('slow');
+            $(display).addClass('peeking', 1500 );
 
             var new_article = $('#recent-items li:last' );
             form.effect('transfer', { to: new_article, className:'shadow' }, 300, function() {
@@ -130,7 +154,7 @@
         $.post( ('/placements/' + $('#remove-items li').attr('id').replace('placement_ids_', '')), '_method=delete&authenticity_token=' + auth_token, function(result) {
           $('#remove-items').effect('shake', { distance: 2, times: 1 }, 200);
           $('#remove-items li').effect('scale', { percent: 30 }, 300, function() { 
-            $('#add_article_select').append( $( '<option></option>' ).val( $(this).attr('data-article-id') ).text( $(this).text() ) );
+            $('#add_article_select').append( $( '<option></option>' ).val( $(this).attr('data-article-id') ).text( $('h2', this).text() ) );
             $(this).remove(); 
           } );
           $('#remove-title').removeClass('busy');
