@@ -5,7 +5,7 @@
 
 #section-content.container
   .span-17
-    .add-article-inset.simple.span-17.ui-block.js-only.js-staging
+    #add-article-inset.simple.span-17.ui-block.js-staging
       .header.clear
         %h6.info New Article
       .remote_content
@@ -32,25 +32,24 @@
     
   -#= link_to "new", new_section_article_path(:section_id => @section ), :class => 'add button'
   .span-3.prepend-3
-    - unless @section.placements.empty?
-      %ul#remove-items.plain.ui-block
-        %h6#remove-title.info
-          Remove
-        .clear
+    %ul#remove-items.plain.ui-block
+      %h6#remove-title.info
+        Remove
+      .clear
 
   .span-6
-    .new.section_placements.ui-block
+    .new.section_placements.ui-block.js-keep
       %h6.info
         Add
       .clear
-      - form_for @section.placements.build do |f|
+      - form_for @section.placements.build, :html => {:class => 'js-keep'} do |f|
         = f.select "article_id", article_options( :exclude_section => @section ), {}, :id => 'add_article_select'
         = f.hidden_field "section_id"
-        = f.submit "Add", :id => 'add_article_button'
+        = f.submit "Add", :id => 'create-placement-button', :class => 'remote_create_placement'
 
-      = link_to "new article", new_section_article_path(:section_id => @section ), :class => 'add button remote_add', :'data-target' => '#section-content .add-article-inset', :id => 'add_article_link'
+      = link_to "new article", new_section_article_path(:section_id => @section ), :class => 'add button remote_add_article', :'data-target' => '#section-content #add-article-inset', :id => 'add_article_link'
 
-  #remote-staging.js-only.js-staging
+  #remote-staging.js-staging
 
 - content_for :dom_ready do
   = "var auth_token = '#{form_authenticity_token}'"
@@ -59,12 +58,19 @@
     var success_message = function(response) { RD.notify("success"); };
     //Create a new Article
     $('#section-content').click(  function(ev) {
-      if( $(ev.target).is('.remote_add')) { 
+      if( $(ev.target).is('.remote_add_article')) { 
         RD.articles.add(ev);
         return false; 
       }
-      if( $(ev.target).is('.remote_edit')) { 
+      if( $(ev.target).is('.remote_edit_article')) { 
         RD.articles.edit(ev);
+        return false;
+      }
+      if( $(ev.target).is('.remote_create_placement:submit')) {
+        var form = $(ev.target.form);
+        RD.articles.display.element = $(ev.target).parents('.ui-block').eq(0);
+        $.post( form.attr('action') + '.js', form.serialize(), RD.placements.create, 'json' );
+        $( 'form select[name*=article_id] option:selected' ).remove();
         return false;
       }
     } );
@@ -85,7 +91,7 @@
             $(display).addClass('peeking', 1500 );
 
             var new_article = $('#recent-items li:last' );
-            form.effect('transfer', { to: new_article, className:'shadow' }, 300, function() {
+            form.effect('transfer', { to: new_article, className:'shadow' }, 800, function() {
               new_article.removeClass('peeking', 500 );
               success_message();  
             } );
@@ -104,7 +110,7 @@
     } );
 
     //Add a new Placemnt for an existing article
-    $('#add_article_button').click( function(ev) {
+    $('#create-placement-button').click( function(ev) {
       var form = $(ev.target.form);
       var added_article = $( '#add_article_select option:selected').eq(0);
       if ( form === undefined ) return true;
@@ -163,7 +169,7 @@
     });
   
     //remote edit form
-    $('.section_placements .remote_edit').each( function() {
+    $('.section_placements .remote_edit_article').each( function() {
       var item = $(this).parents('li').eq(0);
       var display = item.find('.edit-article-inset');
       $(this).click( function() { 

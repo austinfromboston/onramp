@@ -3,7 +3,7 @@ class PlacementsController < ApplicationController
     actions :all
     response_for :create do |format|
       format.html {}
-      format.js { render :json => current_object, :status => :created }
+      format.js { render :json => current_object.to_json(:include => :article), :status => :created }
     end
   end
 

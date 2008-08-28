@@ -32,7 +32,9 @@
   = javascript_include_tag js_effect(:transfer)
   = javascript_include_tag 'tiny_mce/tiny_mce'
   = javascript_include_tag 'application'
-  = javascript_include_tag 'sections'
+  = javascript_include_tag 'ui'
+  -#= javascript_include_tag 'sections'
+  = javascript_include_tag 'section_content'
   = yield :javascript
   - javascript_tag do
     $( function() {
