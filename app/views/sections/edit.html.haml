@@ -16,19 +16,21 @@
       %h6.info
         Top Items
       .clear
-      .content
-        - if ordered and !ordered.empty?
-          - for placement in ordered
-            = render :partial => 'sections/list/placement', :locals => { :placement => placement }
+      .reloadable
+        .content
+          - if ordered and !ordered.empty?
+            - for placement in ordered
+              = render :partial => 'sections/list/placement', :locals => { :placement => placement }
 
     %ul#recent-items.plain.section_placements.ui-block
       %h6.info
         Recent Items
       .clear
-      .content
-        - if unordered and !unordered.empty?
-          - for placement in unordered
-            = render :partial => 'sections/list/placement', :locals => { :placement => placement }
+      .reloadable
+        .content
+          - if unordered and !unordered.empty?
+            - for placement in unordered
+              = render :partial => 'sections/list/placement', :locals => { :placement => placement }
     
   -#= link_to "new", new_section_article_path(:section_id => @section ), :class => 'add button'
   .span-3.prepend-3
@@ -47,13 +49,65 @@
         = f.hidden_field "section_id"
         = f.submit "Add", :id => 'create-placement-button', :class => 'remote_create_placement'
 
-      = link_to "new article", new_section_article_path(:section_id => @section ), :class => 'add button remote_add_article', :'data-target' => '#section-content #add-article-inset', :id => 'add_article_link'
+      = link_to "new article", new_section_article_path(:section_id => @section ), :class => 'add button remote_add_article', :'data-target' => '#section-content #add-article-inset', :id => 'add-article-button'
 
   #remote-staging.js-staging
 
 - content_for :dom_ready do
   = "var auth_token = '#{form_authenticity_token}'"
   = "RD.section = #{@section.to_json}.section;"
+  :plain
+
+    //Add a new article
+    $('#add-article-button').click( function(ev) { 
+      RD.interface.update( {
+        target:"#add-article-inset .remote_content", 
+        source: $(ev.target),
+        url: "/sections/" + RD.section.id + "/articles/new",
+        show: "#add-article-inset",
+        hash: "add-article"
+      } );
+      return false;
+    } );
+
+    //Refresh the content list
+    $('#section-content').bind( 'refresh', function(ev) {
+      $('#section-content #top-items .reloadable').load( '/sections/' + RD.section.id + '/edit #top-items .content', RD.ui.initialize );
+      $('#section-content #recent-items .reloadable').load( '/sections/' + RD.section.id + '/edit #recent-items .content', RD.stacks.try('refresh') );
+    } );
+
+    //Cancel button 
+    $('#add-article-inset').click( function(ev) {
+      if( !$(ev.target).is('.cancel') ) { return true; }
+      $('#add-article-inset').hide(1200);
+      $('#add-article-inset').queue( function() {
+        $('#add-article-inset .remote_content').html('');
+        $(this).dequeue();
+      } );
+      return false;
+
+    } );
+
+    //Add Article Submit
+    $('#add-article-inset').click( function(ev) {
+      if( !$(ev.target).is(':submit') ) { return true; }
+      RD.stacks.create('submit', function() {  $('#add-article-inset').hide(2000 ); });
+      RD.stacks.submit.add( function() {  $('#add-article-inset .remote_content').html('') } );
+
+      RD.interface.submit( {
+        form: $(ev.target.form),
+        callback: function( response ) {
+          //highlight the new item
+          var to_highlight = '#section-content li[data-article-id=' + response.article.id + ']';
+          RD.stacks.create('refresh', function() {  $( to_highlight ).show('puff', {}, 2000 ); });
+
+          RD.stacks.try('submit')();
+          $('#section-content').trigger('refresh');
+        }
+      } );
+      return false;
+    } );
+-#
   :plain
     var success_message = function(response) { RD.notify("success"); };
     //Create a new Article

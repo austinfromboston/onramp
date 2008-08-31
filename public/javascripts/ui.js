@@ -44,4 +44,3 @@ RD.ui = ( function() {
   };
   return self;
 })();
-
