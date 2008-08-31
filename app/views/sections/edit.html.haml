@@ -60,13 +60,17 @@
 
     //Add a new article
     $('#add-article-button').click( function(ev) { 
-      RD.interface.update( {
-        target:"#add-article-inset .remote_content", 
-        source: $(ev.target),
-        url: "/sections/" + RD.section.id + "/articles/new",
-        show: "#add-article-inset",
-        hash: "add-article"
+      RD.stacks.create( 'show_new_article_form', '#add-article-inset', function() {
+        if($(this).is(':visible')) {
+          $(this).hide(300);
+        }
+        $(this).addClass('peeking').show();
+        $(ev.target).effect( 'transfer', { to: $(this), className: "shadow" }, 500 ); 
+        $(this).effect( 'transfer', { to: $(ev.target) }, 500 ); 
+        $(this).removeClass('peeking', 1500 );
       } );
+      var url = "/sections/" + RD.section.id + "/articles/new";
+      $("#add-article-inset .remote_content").load(url, null, RD.stacks.try('show_new_article_form') );
       return false;
     } );
 
@@ -91,7 +95,7 @@
     //Add Article Submit
     $('#add-article-inset').click( function(ev) {
       if( !$(ev.target).is(':submit') ) { return true; }
-      RD.stacks.create('submit', function() {  $('#add-article-inset').hide(2000 ); });
+      RD.stacks.create('submit', '#add-article-inset', function() {  $(this).hide( 1000 ); });
       RD.stacks.submit.add( function() {  $('#add-article-inset .remote_content').html('') } );
 
       RD.interface.submit( {
@@ -99,7 +103,7 @@
         callback: function( response ) {
           //highlight the new item
           var to_highlight = '#section-content li[data-article-id=' + response.article.id + ']';
-          RD.stacks.create('refresh', function() {  $( to_highlight ).show('puff', {}, 2000 ); });
+          RD.stacks.create('refresh', '#section-content', function() {  $( to_highlight ).show('puff', {}, 2000 ); });
 
           RD.stacks.try('submit')();
           $('#section-content').trigger('refresh');

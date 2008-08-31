@@ -96,26 +96,28 @@ RD.transitions = ( function(){
 
 RD.stacks = ( function(){
   var stacks = {
-    create: function( name, start_fn ){ 
+    create: function( name, focus, start_fn ){ 
       if( stacks[name] === undefined || $(stacks[name]).queue().length === 0 ) {
-        stacks[name] = {
-          add: function( fn ) { $(stacks[name]).queue( stacks.queuify(fn) ) },
-          run: function() { stacks.run( name ) }
+        var current_stack = {
+          focus: focus || current_stack,
+          add: function( fn ) { $(focus).queue( current_stack.queuify(fn) ) },
+          run: function() { stacks.run( name ) },
+          queuify: function( fn ) {
+            return function() {
+              fn.apply( $(current_stack.focus));
+              $(focus).dequeue();
+            };
+          }
         };
       }
-      $(stacks[name]).queue( function() {} );
+      $(current_stack.focus).queue( function() {} );
       if( start_fn !== undefined ) {
-        stacks[name].add(start_fn);
+        current_stack.add(start_fn);
       }
-    },
-    queuify: function( fn ) {
-      return function() {
-        fn();
-        $(this).dequeue();
-      }
+      stacks[name] = current_stack;
     },
     run: function( name ){ 
-      $(stacks[name]).dequeue();
+      $(stacks[name].focus).dequeue();
       RD.ui.initialize();
     },
     try: function( name ) {
