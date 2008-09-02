@@ -5,10 +5,14 @@
 
 #section-content.container
   .span-17
-    #add-article-inset.simple.span-17.ui-block.js-staging
+    #add-article.span-17.ui-block.inactive
+      -#.js-staging
       .header.clear
-        %h6.info New Article
-      .remote_content
+        %h6.info 
+          -#New Article
+          = link_to "New Article", new_section_article_path(:section_id => @section ), :class => 'add button remote_add_article', :'data-target' => '#section-content #add-article-inset', :id => 'add-article-button'
+      #add-article-inset.js-staging.simple
+        .remote_content
     .clear
 
     - ordered, unordered = @section.placements.partition { |p| p.list_order }
@@ -49,7 +53,6 @@
         = f.hidden_field "section_id"
         = f.submit "Add", :id => 'create-placement-button', :class => 'remote_create_placement'
 
-      = link_to "new article", new_section_article_path(:section_id => @section ), :class => 'add button remote_add_article', :'data-target' => '#section-content #add-article-inset', :id => 'add-article-button'
 
   #remote-staging.js-staging
 
@@ -58,79 +61,65 @@
   = "RD.section = #{@section.to_json}.section;"
   :plain
 
-    //Add a new article
-    $('#add-article-button').click( function(ev) { 
-      RD.stacks.create( 'show_new_article_form', '#add-article-inset', function() {
-        if($(this).is(':visible')) {
-          $(this).hide(300);
-        }
-        $(this).addClass('peeking').show();
-        $(ev.target).effect( 'transfer', { to: $(this), className: "shadow" }, 500 ); 
-        $(this).effect( 'transfer', { to: $(ev.target) }, 500 ); 
-        $(this).removeClass('peeking', 1500 );
-      } );
-      var url = "/sections/" + RD.section.id + "/articles/new";
-      $("#add-article-inset .remote_content").load(url, null, RD.stacks.try('show_new_article_form') );
-      return false;
-    } );
-
     //Refresh the content list
     $('#section-content').bind( 'refresh', function(ev) {
       $('#section-content #top-items .reloadable').load( '/sections/' + RD.section.id + '/edit #top-items .content', RD.ui.initialize );
       $('#section-content #recent-items .reloadable').load( '/sections/' + RD.section.id + '/edit #recent-items .content', RD.stacks.try('refresh') );
     } );
 
-    //Cancel button 
-    $('#add-article-inset').click( function(ev) {
+    //Cancel button, new article and edit
+    $('#add-article-inset,.edit-article-inset').click( function(ev) {
       if( !$(ev.target).is('.cancel') ) { return true; }
-      $('#add-article-inset').hide(1200);
-      $('#add-article-inset').queue( function() {
-        $('#add-article-inset .remote_content').html('');
+      var article_inset = $(ev.target).parents('#add-article-inset,.edit-article-inset').eq(0);
+      $(article_inset).hide(1200);
+      $(article_inset).queue( function() {
+        $('.remote_content', article_inset).html('');
+        $(this).dequeue();
+      } );
+      $(article_inset).queue( function() {
+        $(article_inset).parents('#add-article').addClass('inactive');
         $(this).dequeue();
       } );
       return false;
 
     } );
 
-    //Add Article Submit
-    $('#add-article-inset').click( function(ev) {
+    //Edit or add an article
+    $('#section-content').click( function(ev) {
+      if( !$(ev.target).is('.edit,#add-article-button') ) { return true; }
+      if( $(ev.target).is('.edit') ) {
+        var article_inset = $(ev.target).parents('li[data-article-id]').eq(0).find('.edit-article-inset').eq(0);
+      } else {
+        var article_inset = $('#add-article-inset');
+        $(article_inset).parents('#add-article').removeClass('inactive');
+      }
+      RD.stacks.create('show_article_form', article_inset, function() {
+        $(this).show('blind', {}, 2000 );
+      } );
+      $( '.remote_content', article_inset ).load( ev.target.href, RD.stacks.try('show_article_form'));
+      return false;
+    } );
+    
+    //Article Submit
+    $('#add-article-inset,.edit-article-inset').click( function(ev) {
       if( !$(ev.target).is(':submit') ) { return true; }
-      RD.stacks.create('submit', '#add-article-inset', function() {  $(this).hide( 1000 ); });
-      RD.stacks.submit.add( function() {  $('#add-article-inset .remote_content').html('') } );
+      var article_inset = $(ev.target).parents('#add-article-inset,.edit-article-inset').eq(0);
+      RD.stacks.create('submit', article_inset, function() {  $(this).hide( 1000 ); });
+      RD.stacks.submit.add( function() {  $('.remote_content', article_inset).html('') } );
+      RD.stacks.submit.add( function() {  $(article_inset).parents('#add-article').addClass('inactive'); } );
 
       RD.interface.submit( {
         form: $(ev.target.form),
         callback: function( response ) {
           //highlight the new item
           var to_highlight = '#section-content li[data-article-id=' + response.article.id + ']';
-          RD.stacks.create('refresh', '#section-content', function() {  $( to_highlight ).show('puff', {}, 2000 ); });
+          RD.stacks.create('refresh', '#section-content', function() {  $( to_highlight ).show('puff', {}, 1000 ); });
 
           RD.stacks.try('submit')();
           $('#section-content').trigger('refresh');
         }
       } );
       return false;
-    } );
--#
-  :plain
-    var success_message = function(response) { RD.notify("success"); };
-    //Create a new Article
-    $('#section-content').click(  function(ev) {
-      if( $(ev.target).is('.remote_add_article')) { 
-        RD.articles.add(ev);
-        return false; 
-      }
-      if( $(ev.target).is('.remote_edit_article')) { 
-        RD.articles.edit(ev);
-        return false;
-      }
-      if( $(ev.target).is('.remote_create_placement:submit')) {
-        var form = $(ev.target.form);
-        RD.articles.display.element = $(ev.target).parents('.ui-block').eq(0);
-        $.post( form.attr('action') + '.js', form.serialize(), RD.placements.create, 'json' );
-        $( 'form select[name*=article_id] option:selected' ).remove();
-        return false;
-      }
     } );
 
 -# content_for :dom_ready do

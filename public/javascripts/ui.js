@@ -40,6 +40,9 @@ RD.ui = ( function() {
     initialize: function() {
       $( '.js-only' ).removeClass('js-only');
       $( '#remote-staging' ).html( '' );
+      if( $('.tiny_mce:visible').length > 0 ) {
+        window.setTimeout( RD.load_wysiwyg, 1000 );
+      }
     }
   };
   return self;

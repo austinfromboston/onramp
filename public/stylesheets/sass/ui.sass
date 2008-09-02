@@ -13,12 +13,24 @@ ul#breadcrumb
 h6.info
   :text-transform uppercase
   :font-size 10px
-  :background-color #FF8F8F
-  :color #FFFFFF
+  :background-color = !heading_bg
+  :color = !heading_text
   :padding 1px 20px 1px 20px
   :float left
   :border grey solid
   :border-width  0 0 1px 0
+  a
+    :color = !heading_text
+    :text-decoration none
+  .inactive &
+    :background-color = !heading_text
+    :border-width  0
+    a
+      :color  = !heading_bg
+    &:hover
+      :background-color = !heading_bg
+      a
+        :color = !heading_text
 
 .js-hidden, .js-only, .js-staging
   :display none
@@ -36,6 +48,10 @@ h6.info
   :min-height 50px
   :min-height 50px
   :height auto
+  &.inactive
+    :min-height 0
+    :background-color transparent
+    
 
 body.edit .section_placements
   li
