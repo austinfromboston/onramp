@@ -39,8 +39,9 @@ ActionController::Routing::Routes.draw do |map|
   #map.connect ':controller/:action/:id'
   #map.connect ':controller/:action/:id.:format'
   #
-  map.resources :sections, :has_many => [ :placements, :articles ]
+  map.resources :sections, :has_many => [ :placements, :articles, :available_articles ]
   map.resources :articles, :has_many => :placements
   map.resources :placements
-  map.resource :placement_orderings
+  map.resource  :placement_orderings
+  map.resources :ui_tests, :has_many => :sections
 end

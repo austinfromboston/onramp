@@ -6,10 +6,8 @@
 #section-content.container
   .span-17
     #add-article.span-17.ui-block.inactive
-      -#.js-staging
       .header.clear
         %h6.info 
-          -#New Article
           = link_to "New Article", new_section_article_path(:section_id => @section ), :class => 'add button remote_add_article', :'data-target' => '#section-content #add-article-inset', :id => 'add-article-button'
       #add-article-inset.js-staging.simple
         .remote_content
@@ -25,6 +23,8 @@
           - if ordered and !ordered.empty?
             - for placement in ordered
               = render :partial => 'sections/list/placement', :locals => { :placement => placement }
+          - else
+            %li
 
     %ul#recent-items.plain.section_placements.ui-block
       %h6.info
@@ -35,23 +35,34 @@
           - if unordered and !unordered.empty?
             - for placement in unordered
               = render :partial => 'sections/list/placement', :locals => { :placement => placement }
+          - else
+            %li
     
   -#= link_to "new", new_section_article_path(:section_id => @section ), :class => 'add button'
-  .span-3.prepend-3
+  -#.span-3.prepend-3
     %ul#remove-items.plain.ui-block
       %h6#remove-title.info
         Remove
       .clear
 
   .span-6
-    .new.section_placements.ui-block.js-keep
+    %ul#available-items.section_placements.ui-block.plain
       %h6.info
         Add
       .clear
-      - form_for @section.placements.build, :html => {:class => 'js-keep'} do |f|
+      - form_for @section.placements.build, :html => {:class => 'js-hide', :id => 'create-placement' } do |f|
         = f.select "article_id", article_options( :exclude_section => @section ), {}, :id => 'add_article_select'
+        = f.hidden_field "list_order"
         = f.hidden_field "section_id"
-        = f.submit "Add", :id => 'create-placement-button', :class => 'remote_create_placement'
+        = f.submit "Add" #, :id => 'create-placement-button', :class => 'remote_create_placement'
+
+      - form_tag section_available_articles_path(:section_id => @section ), :method => :get, :class => 'js-only', :id => 'available-search-form' do
+        = text_field_tag "query[fulltext]", params[:query] || "Search", :class => 'large', :id => 'articles-search'
+        = submit_tag "Go", :class => 'js-staging'
+
+      .reloadable.js-only
+        .content
+          
 
 
   #remote-staging.js-staging
@@ -60,6 +71,8 @@
   = "var auth_token = '#{form_authenticity_token}'"
   = "RD.section = #{@section.to_json}.section;"
   :plain
+    RD.auth_token = auth_token;
+    var success_message = function(response) { RD.notify("success"); };
 
     //Refresh the content list
     $('#section-content').bind( 'refresh', function(ev) {
@@ -93,15 +106,30 @@
         var article_inset = $('#add-article-inset');
         $(article_inset).parents('#add-article').removeClass('inactive');
       }
+      if( $(article_inset).is(':visible')) { 
+        $(article_inset).hide('blind', {}, 2000 ); 
+        $(article_inset).parents('#add-article').addClass('inactive');
+        $(article_inset).parents('li[data-article-id]').find('.description').eq(0).show('blind');
+        return false;
+      }
       RD.stacks.create('show_article_form', article_inset, function() {
+        $(this).parents('li[data-article-id]').find('.description').eq(0).hide('blind');
         $(this).show('blind', {}, 2000 );
       } );
       $( '.remote_content', article_inset ).load( ev.target.href, RD.stacks.try('show_article_form'));
       return false;
     } );
     
+    //Article Search
+    $('#available-search-form').submit( function(ev) {
+      $('#available-items .content').html('');
+      $('#available-items .reloadable').load( $(ev.target).attr('action') + '?' + $(ev.target).serialize() + ' .content' );
+      return false;
+    } );
+
     //Article Submit
     $('#add-article-inset,.edit-article-inset').click( function(ev) {
+    //$('#add-article-inset,.edit-article-inset').livequery( 'click', function(ev) {
       if( !$(ev.target).is(':submit') ) { return true; }
       var article_inset = $(ev.target).parents('#add-article-inset,.edit-article-inset').eq(0);
       RD.stacks.create('submit', article_inset, function() {  $(this).hide( 1000 ); });
@@ -114,6 +142,7 @@
           //highlight the new item
           var to_highlight = '#section-content li[data-article-id=' + response.article.id + ']';
           RD.stacks.create('refresh', '#section-content', function() {  $( to_highlight ).show('puff', {}, 1000 ); });
+          RD.stacks.refresh.add( function() {  RD.notify('article saved'); });
 
           RD.stacks.try('submit')();
           $('#section-content').trigger('refresh');
@@ -122,126 +151,81 @@
       return false;
     } );
 
--# content_for :dom_ready do
-  = "var auth_token = '#{form_authenticity_token}'"
-  = "var section = #{@section.to_json}.section;"
-  :plain
-    var success_message = function(response) { RD.notify("success"); };
-    //Create a new Article
-    $('#add_article_link').click( function(ev) {
-      var display = $(ev.target).attr('data-target');
-      $.get('/sections/' + section.id + '/articles/new', {}, function( response ) {
-        $(display).addClass('peeking').html( $('<h3></h3>').text('New Article')).append( response ).removeClass('peeking', 2500 ).find(':submit').click( function( ev ) {
-          var form = $(ev.target.form);
-          $.post( form.attr('action') + '.js', form.serialize(), function( response ) { 
-            $('#recent-items').append( $('<li id="placement_ids_' + response.article.placements[0].id + '" data-article-id="'+response.article.id+'" class="peeking"></li>').append($('<h2></h2>').text( response.article.title )));
-            $(display).addClass('peeking', 1500 );
-
-            var new_article = $('#recent-items li:last' );
-            form.effect('transfer', { to: new_article, className:'shadow' }, 800, function() {
-              new_article.removeClass('peeking', 500 );
-              success_message();  
-            } );
-          }, 'json');
-          return false;
-        } );
-        
-        $('.submit .cancel', display ).click( function() { 
-          $( display ).addClass('peeking', 2000).html('')
-          window.setTimeout( function() { $(display).removeClass('peeking'); }, 3000 );
-          return false; 
-        } );
-      } );
-      window.location.hash="add_article"
-      return false;
-    } );
-
-    //Add a new Placemnt for an existing article
-    $('#create-placement-button').click( function(ev) {
-      var form = $(ev.target.form);
-      var added_article = $( '#add_article_select option:selected').eq(0);
-      if ( form === undefined ) return true;
-      $.post( form.attr('action') + '.js', form.serialize(), function( response ) { 
-        $('#recent-items').append( $('<li id="placement_ids_' + response.placement.id + '" data-article-id="'+added_article.val()+'" class="peeking"></li>').append($('<h2></h2>').text( added_article.text() )));
-        added_article.parents( 'form' ).effect('transfer', { to: $('#recent-items li:last'), className: 'shadow' }, 300, function() {
-          $('#recent-items li:last').removeClass('peeking', 500 );
-          added_article.remove();
-          success_message();
-        } );
-      }, 'json' );
-      return false;
-    } );
-    
+    //Sortables for placement ordering
     //Update Top Items
     $('#top-items').sortable({ 
       tolerance: 'intersect',
       placeholder: 'shadow-droppable',
       opacity: .7,
-      items: '> li',
+      items: '.content > li',
       containment: '#section-content',
       update: function(ev) { 
-        $.post( '/placement_orderings', '_method=put&authenticity_token=' + auth_token + '&' + $('#top-items').sortable( 'serialize' ), success_message);
+        //$('#top-items')[0].list.create_any_pending_and_save();
+        console.log('change to top');
+        if( RD.placements.is_pending('#top-items')) {
+          RD.placements.create_pending('#top-items');
+        } else {
+          RD.placements.save_order('#top-items');
+        }
       },
-      connectWith: [ "#recent-items", '#remove-items' ]
+      connectWith: [ "#recent-items", '#available-items' ]
     });
+
+    RD.create_placement_list('#top-items');
 
     //Update Recent Items
     $('#recent-items').sortable( { 
       placeholder: 'shadow-droppable',
-      items: '> li',
+      items: '.content > li',
       containment: '#section-content',
-      connectWith: [ '#top-items', '#remove-items' ], 
+      connectWith: [ '#top-items','#available-items' ], 
       update: function(ev) { 
-        $.post( '/placement_orderings', '_method=delete&authenticity_token=' + auth_token + '&' + $('#recent-items').sortable( 'serialize' ), success_message );
+        console.log('change to recent');
+        if( RD.placements.is_pending('#recent-items')) {
+          RD.placements.create_pending('#recent-items');
+        } else {
+          RD.placements.default_order('#recent-items');
+        }
       }
     } );
 
-    //Deletion
-    $('#remove-items').sortable( { 
-      items: '> li',
+    //Update Available Items
+    $('#available-items').sortable( { 
+      placeholder: 'shadow-droppable',
+      items: '.content > li',
+      containment: '#section-content',
       connectWith: [ '#top-items', '#recent-items' ], 
-      placeholder: 'shadow',
       update: function(ev) { 
-        
-        $('#remove-title').addClass('busy');
-        $.post( ('/placements/' + $('#remove-items li').attr('id').replace('placement_ids_', '')), '_method=delete&authenticity_token=' + auth_token, function(result) {
-          $('#remove-items').effect('shake', { distance: 2, times: 1 }, 200);
-          $('#remove-items li').effect('scale', { percent: 30 }, 300, function() { 
-            $('#add_article_select').append( $( '<option></option>' ).val( $(this).attr('data-article-id') ).text( $('h2', this).text() ) );
-            $(this).remove(); 
-          } );
-          $('#remove-title').removeClass('busy');
-        } );
+        console.log('change to available');
+        //$.post( '/placement_orderings', '_method=delete&authenticity_token=' + auth_token + '&' + $('#recent-items').sortable( 'serialize' ), function() { $('#recent-items,#top-items').trigger('ready') } );
       }
-    });
-  
-    //remote edit form
-    $('.section_placements .remote_edit_article').each( function() {
-      var item = $(this).parents('li').eq(0);
-      var display = item.find('.edit-article-inset');
-      $(this).click( function() { 
-        $.get( '/articles/'+item.attr('data-article-id') +'/edit', {}, function( response ) {
-          display.show('slow').addClass('peeking');
-          display.html( $('<h3></h3>').text('Edit Article') ).append( response );
-          display.removeClass('peeking', 3000 );
+    } );
 
-          // override form submit behavior
-          $(':submit', display ).click( function(ev) {
-            var form = $( ev.target.form );
-            $.post( form.attr('action') + '.js', form.serialize(), function( response ) { 
-              display.addClass('peeking', 1500).hide('slow');
-              $('h2:first', item ).text( response.article.title );
-            }, 'json' );
-            return false;
-          } );
+    //Refresh ordered lists
+    $('#recent-items,#top-items').bind('ready', function(ev) {
+      $('.content li:empty', this).remove();
+      if( $('.content li', this).length === 0 ){
+        $('.content', this).html('<li></li>');
+      }
+      RD.ui.initialize();
+    } );
 
-          // override form cancel behavior
-          $('.cancel', display ).click( function(ev) {
-            display.addClass('peeking', 1500).hide('slow').html('');
-            return false;
-          } );
-        } );
-        return false;
-      }) ;
+    //New Placement
+    $('#create-placement').submit( function(ev) {
+      //if( !$(ev.target).is(':submit')) { return true; }
+      RD.interface.submit( {
+        form: $(ev.target),
+        callback: function( response ) {
+          var to_highlight = '#section-content li[data-article-id=' + response.placement.article_id + ']';
+          RD.stacks.create('refresh', '#section-content', function() {  
+            if( $( to_highlight ).is(':visible')) { $(to_highlight).hide();  }
+            $( to_highlight ).show('puff', {}, 1000 ); 
+          });
+          RD.stacks.refresh.add( function() {  RD.notify('article added'); });
+          $('#section-content').trigger('refresh');
+        }
+      });
+      return false;
     } );
     
+

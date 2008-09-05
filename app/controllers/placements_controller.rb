@@ -2,7 +2,7 @@ class PlacementsController < ApplicationController
   make_resourceful do
     actions :all
     response_for :create do |format|
-      format.html {}
+      format.html { redirect_to placement_path(current_object) }
       format.js { render :json => current_object.to_json(:include => :article), :status => :created }
     end
   end

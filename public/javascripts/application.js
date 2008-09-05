@@ -8,11 +8,18 @@ RD = ( function() {
       return $('#ajax_message');
     }(),
     clear_messages: function() {
-      self.message_display.text('');
+      self.message_display.hide('puff');
+      self.message_display.queue( function() { $(this).text(''); $(this).dequeue();} );
     },
     notify: function( message ) {
-      self.message_display.text( message ); 
-      window.setTimeout( RD.clear_messages, 5000 );
+      self.message_display.text( message );
+      if( !self.message_display.is(':visible') ) {
+        self.message_display.show();
+      } 
+      if( self.existing_notice !== undefined ) {
+        window.clearTimeout( self.existing_notice );
+      }
+      self.existing_notice = window.setTimeout( RD.clear_messages, 300 + ( message.length * 50 ) );
     }
   };
   return self;

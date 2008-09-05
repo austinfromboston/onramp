@@ -45,9 +45,10 @@ h6.info
   :border grey solid
   :background-color #F6F6F6
   :border-width  1px 0 0px 0
-  :min-height 50px
-  :min-height 50px
-  :height auto
+  .content
+    :min-height 50px
+    :min-height 50px
+    :height auto
   &.inactive
     :min-height 0
     :background-color transparent
@@ -96,3 +97,21 @@ body.edit .section_placements
     :background-color #ff2222
     :border 3px solid #8e8e8e
     :opacity .6
+
+#ajax_message
+  :z-index 10000
+  :display none
+  :opacity .7
+  :background-color #959595
+  :color #FFFFFF
+  :padding 20px
+  :font-size 30px
+  :text-align center
+  :position fixed
+  :width 50%
+  :top 30%
+  :left 25%
+
+#available-items
+  li
+    :font-size .75em

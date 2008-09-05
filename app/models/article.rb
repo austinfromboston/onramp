@@ -2,7 +2,12 @@ class Article < ActiveRecord::Base
   has_many :placements
   has_many :sections, :through => :placements
 
-  #before_save :reconcile_body
+  named_scope :excluding_section, lambda { |section_id|
+    { :include => :sections, :conditions => [ "sections.id != ? or sections.id IS ?", section_id, nil ] }
+  }
+  named_scope :fulltext, lambda { |text|
+    { :conditions => [ "title like ? or body like ? or body_html like ? or blurb like ?", "%#{text}%", "%#{text}%", "%#{text}%", "%#{text}%"] }
+  }
 
   STATUSES = %w/ draft published /
 

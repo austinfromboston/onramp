@@ -4,25 +4,27 @@
     = controller.controller_name.titleize
     &mdash;
     = controller.action_name.titleize
-  = stylesheet_link_tag 'blueprint/print', :media => 'print'
-  = stylesheet_link_tag 'blueprint/screen', :media => 'screen, projection'
-  <!--[if IE]>
-  = stylesheet_link_tag 'blueprint/ie'
-  <![endif]-->
-  = stylesheet_link_tag 'application'
-  = stylesheet_link_tag 'forms'
+  - unless params[:ui_test_id]
+    = stylesheet_link_tag 'blueprint/print', :media => 'print'
+    = stylesheet_link_tag 'blueprint/screen', :media => 'screen, projection'
+    <!--[if IE]>
+    = stylesheet_link_tag 'blueprint/ie'
+    <![endif]-->
+    = stylesheet_link_tag 'application'
+    = stylesheet_link_tag 'forms'
   = stylesheet_link_tag 'ui'
 
 %body{ :class => "#{controller.controller_name} #{controller.action_name}" }
-  #container.span-24
+  #container.span-24{ :class => params[:ui_test_id] ? 'js-staging' : '' }
     #header.container
       = render 'layouts/menu'
-      #ajax_message
+      #ajax_message.inactive.js-only
     #main.container
       = yield
     #footer.container
 
   = javascript_include_tag 'jquery/jquery-1.2.6.js'
+  = javascript_include_tag 'jquery/plugins/jquery.fn.js'
   = javascript_include_tag js_ui(:core)
   = javascript_include_tag js_ui(:sortable)
   = javascript_include_tag js_effect(:core)
@@ -34,11 +36,23 @@
   = javascript_include_tag 'tiny_mce/tiny_mce'
   = javascript_include_tag 'application'
   = javascript_include_tag 'ui'
-  -#= javascript_include_tag 'sections'
+  = javascript_include_tag 'sections'
   = javascript_include_tag 'section_content'
-  = yield :javascript
-  - javascript_tag do
-    $( function() {
-    RD.ui.initialize();
-    = yield :dom_ready
-    } );
+
+  - unless params[:ui_test_id]
+    = yield :javascript
+    - javascript_tag do
+      $( function() {
+      RD.ui.initialize();
+      $('body').ajaxError( function(ev, req, options, error ) { RD.notify('problem') } );
+      = yield :dom_ready
+      } );
+  - else
+    #dom_test
+    = javascript_include_tag 'screw/jquery.print.js'
+    = javascript_include_tag 'screw/screw.builder.js'
+    = javascript_include_tag 'screw/screw.matchers.js'
+    = javascript_include_tag 'screw/screw.events.js'
+    = javascript_include_tag 'screw/screw.behaviors.js'
+    = stylesheet_link_tag '../javascripts/screw/screw'
+    = js_spec params[:ui_test_id] 

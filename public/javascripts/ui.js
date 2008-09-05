@@ -39,6 +39,7 @@ RD.ui = ( function() {
     },
     initialize: function() {
       $( '.js-only' ).removeClass('js-only');
+      $( '.js-hide' ).addClass('js-hidden').removeClass('js-hide');
       $( '#remote-staging' ).html( '' );
       if( $('.tiny_mce:visible').length > 0 ) {
         window.setTimeout( RD.load_wysiwyg, 1000 );

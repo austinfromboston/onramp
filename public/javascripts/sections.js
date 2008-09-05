@@ -15,35 +15,6 @@ RD.load_wysiwyg = function() {
     } ); 
 };
 
-RD.ui = ( function() {
-  var self = {
-    peek: function( item ) {
-      item.addClass('peeking').show();
-      return item;
-    },
-    show: function( item ) {
-      self.peek(item).removeClass('peeking', 1500);
-      return item;
-    },
-    hide: function( item ) {
-      item.addClass('peeking', 2500);
-      window.setTimeout( function() {
-        item.hide();
-        item.removeClass('peeking');
-      }, 2800 );
-      return item;
-    },
-    clear: function( item ) {
-      item.html('');
-      return item;
-    },
-    initialize: function() {
-      $( '.js-only' ).removeClass('js-only');
-      $( '#remote-staging' ).html( '' );
-    }
-  };
-  return self;
-})();
 
 RD.articles = ( function() {
   var self = {
@@ -105,73 +76,86 @@ RD.articles = ( function() {
 
 RD.placements = ( function() {
   var self = {
-    refresh: function( html ) {
-      $.get('/sections/'+RD.section.id+'/placements', {}, self.display.refresh );
+    is_pending: function( path ) {
+      return ($('li#placement_ids_', path ).length > 0 );
     },
-    destroy: function( ev ) {
-      $('#remove-title').addClass('busy');
-      $.post( ('/placements/' + $('#remove-items li').attr('id').replace('placement_ids_', '')), '_method=delete&authenticity_token=' + auth_token, self.display.destroy_article_transition );
-    },
-    create: function( response ) {
-      self.display.new_article = response.placement.article;
-      self.refresh();
-    },
-    display: (function() {
-      var display_self = {
-        refresh: function( html ) {
-          $( '#remote-staging' ).html( html );
-          $( '#section-content #top-items .content' ).html( $( '#remote-staging #top-items .content' ).html());
-          $( '#section-content #recent-items .content' ).html( $( '#remote-staging #recent-items .content' ).html());
-          RD.ui.initialize();
-          window.location.hash = '#';  
-          if (display_self.new_article !== undefined) { 
-            display_self.new_article_transition();
-            display_self.new_article = undefined;
-          }
-          if (display_self.updated_article !== undefined) { 
-            display_self.updated_article_transition();
-            display_self.updated_article = undefined;
-          }
-        },
-        create: function( response ) {
-          display_self.new_article = response.article;
-          self.refresh();
-        },
-        update: function( response ) {
-          display_self.updated_article = response.article;
-          RD.ui.hide( RD.articles.display.element);
-          self.refresh();
-        },
-        destroy_article_transition: function( result ) {
-          $('#remove-items').effect('shake', { distance: 2, times: 1 }, 200);
-          $('#remove-items li').effect('scale', { percent: 30 }, 300, function() { 
-            $('#add_article_select').append( $( '<option></option>' ).val( $(this).attr('data-article-id') ).text( $('h2', this).text() ) );
-            $(this).remove(); 
-            $('#remove-title').removeClass('busy');
-          } );
-        },
-        updated_article_transition: function() {
-          var updated_item = $('#section-content li[data-article-id='+ display_self.updated_article.id +']');
-          RD.ui.show( updated_item );
-        },
-        new_article_transition: function() {
-          var new_item = $('#section-content li[data-article-id='+ display_self.new_article.id +']');
-          new_item.addClass('peeking');
-
-          var source = $(RD.articles.display.element);
-          console.log(source);
-          $('.remote_content', source ).html('');
-          if( !$(source).is('.js-keep')) { RD.ui.peek(source); } 
-          console.log(new_item);
-          source.effect('transfer', { to:new_item, className:'shadow'}, 300, function() {
-            RD.ui.show( new_item );
-            if( !$(source).is('.js-keep')) { $( source ).hide('slow'); }
-          } );
+    create_pending: function( path ) {
+      $('li#placement_ids_', path).each( function() {
+        $('#create-placement select').val( $(this).attr('data-article-id'));
+        var new_item = this;
+        if( $(path).is('ol')) {
+          var list_order = $('li[data-article-id]', path ).index(this);
+          var after_create = function( response ) {
+            $(new_item).attr('id', 'placement_ids_' + response.placement.id );
+            self.save_order(path);
+            //$.post( '/placement_orderings', '_method=put&authenticity_token=' + auth_token + '&' + $(path).sortable( 'serialize' ), function() { $('#top-items,#recent-items').trigger('ready') } );
+            }; 
+          $('#create-placement #placement_list_order').val(  list_order + 1 );
+          $.post( '/placements.js', $('#create-placement').serialize(), after_create, 'json');
+          $('#create-placement #placement_list_order').val( '' );
+        } else {
+          var after_create = function( response ) {
+            $(new_item).attr('id', 'placement_ids_' + response.placement.id );
+            self.default_order(path);
+            //$.post( '/placement_orderings', '_method=delete&authenticity_token=' + auth_token + '&' + $(path).sortable( 'serialize' ), function() { $('#top-items,#recent-items').trigger('ready') } );
+            }; 
+          $.post( '/placements.js', $('#create-placement').serialize(), after_create, 'json');
         }
-      };
-      return display_self;
-    })()
-      
+      } );
+    },
+    save_order: function( path ) {
+      $.post( '/placement_orderings', '_method=put&authenticity_token=' + RD.auth_token + '&' + $(path).sortable( 'serialize' ), function() { $('#top-items,#recent-items').trigger('ready') } );
+    },
+    default_order: function( path ) {
+      $.post( '/placement_orderings', '_method=delete&authenticity_token=' + RD.auth_token + '&' + $(path).sortable( 'serialize' ), function() { $('#top-items,#recent-items').trigger('ready') } );
+    }
   };
   return self;
 })();
+
+RD.create_placement_list = function( path ) {
+  var self = {
+    has_pending: function( ) {
+      return ($('li#placement_ids_', path).length > 0 );
+    },
+    entry: {
+      after_create_ordered: function(response) {
+        $(this).attr('id', 'placement_ids_' + response.placement.id );
+        self.save_order(path);
+      },
+      after_create_recent: function( response ) {
+        $(this).attr('id', 'placement_ids_' + response.placement.id );
+        self.default_order(path);
+      }
+    },
+    create_ordered_placement: function() {
+      $('#create-placement select').val( $(this).attr('data-article-id'));
+      var list_order = $('li[data-article-id]', path ).index(this);
+      this.entry = self.entry;
+      $('#create-placement #placement_list_order').val(  list_order + 1 );
+      $.post( '/placements.js', $('#create-placement').serialize(), this.entry.after_create_ordered, 'json');
+      $('#create-placement #placement_list_order').val( '' );
+    },
+    create_placement: function() {
+      this.entry = self.entry;
+      $.post( '/placements.js', $('#create-placement').serialize(), this.entry.after_create_recent, 'json');
+    },
+    create_any_pending_and_save: function() {
+      if( self.has_pending() ) {
+        self.create_all_pending();
+      } else {
+        self.save_order();
+      }
+    },
+    create_all_pending: function( ) {
+      $('li#placement_ids_', this).each( self.create_ordered_placement ); 
+    },
+    save_order: function( ) {
+      $.post( '/placement_orderings', '_method=put&authenticity_token=' + RD.auth_token + '&' + $(path).sortable( 'serialize' ), function() { $('#top-items,#recent-items').trigger('ready') } );
+    },
+    default_order: function( ) {
+      $.post( '/placement_orderings', '_method=delete&authenticity_token=' + RD.auth_token + '&' + $(path).sortable( 'serialize' ), function() { $('#top-items,#recent-items').trigger('ready') } );
+    }
+  };
+  $(path)[0].list = self;
+};

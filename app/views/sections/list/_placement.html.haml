@@ -1,25 +1,25 @@
 %li{ :id => "placement_ids_#{placement.id}", :'data-article-id' => placement.article_id }
-  %h2
-    = placement.name
-  .date
-  - if placement.article.published_at
-    Published:
-    = placement.article.published_at.strftime('%Y-%m-%d') 
-  - else
-    Created:
-    = placement.article.created_at.strftime('%Y-%m-%d') 
-  .status
-    (
-    = placement.article.status
-    )
-  .js-only
-    (
-    = link_to "edit", edit_article_path(placement.article), :class => "edit button remote_edit_article"
-    )
+  .description
+    %h2
+      = placement.name
+    .date
+    - if placement.article.published_at
+      Published:
+      = placement.article.published_at.strftime('%Y-%m-%d') 
+    - else
+      Created:
+      = placement.article.created_at.strftime('%Y-%m-%d') 
+    .status
+      (
+      = placement.article.status
+      )
+    .js-only
+      (
+      = link_to "edit", edit_article_path(placement.article), :class => "edit button remote_edit_article"
+      )
   .edit-article-inset.simple.js-staging.ui-block
-    %h6.info Edit Article
+    %h6.info
+      = link_to "Edit Article", edit_article_path(placement.article), :class => "edit button remote_edit_article"
     .clear
     .remote_content
-  -# form_for placement do |f|
-    = f.hidden_field :list_order, :size => 2
 
