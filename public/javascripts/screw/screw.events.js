@@ -10,7 +10,9 @@
           return $(this).addClass('focused');
         })
         .bind('scroll', function() {
-          document.body.scrollTop = $(this).offset().top;
+          var sel = $(this).fn('selector');
+          var use_browser_top = $.inArray(sel, [ Screw.Defaults.to_run + ':eq(0)', 'body > .describe']) >= 0;
+          document.body.scrollTop = use_browser_top ? 0 : $(this).offset().top;
         });
 
       $('.it')
@@ -18,24 +20,32 @@
           $(this).addClass('enqueued');
         })
         .bind('running', function() {
-          $(this).addClass('running');
+          $(this)
+            .addClass('running')
+            .removeClass('failed')
+            .removeClass('passed');
         })
         .bind('passed', function() {
-          $(this).addClass('passed');
+          $(this)
+            .addClass('passed')
+            .removeClass('failed');
+          $('.status').fn('display');
         })
         .bind('failed', function(e, reason) {
+          reason = reason || '';
           $(this)
             .addClass('failed')
-            .append($('<p class="error">').text(reason.toString()))
-
-          var file = reason.fileName || reason.sourceURL;
-          var line = reason.lineNumber || reason.line;          
-          if (file || line) {
-            $(this).append($('<p class="error">').text('line ' + line + ', ' + file));
+            .removeClass('passed')
+            .append($('<p class="error"></p>').text(reason.toString()));
+          $('.status').fn('display');
+          if (reason.fileName || reason.lineNumber) {
+            $(this)
+              .append($('<p class="error"></p>').text(reason.fileName + " : " + reason.lineNumber));
           }
         })
     })
     .bind('before', function() {
+      Screw.suite_start_time = new Date();
       $('.status').text('Running...');
     })
     .bind('after', function() {

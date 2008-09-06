@@ -1,9 +1,15 @@
+Screw.Defaults = Screw.Defaults || {};
+Screw.Defaults.to_run = 'body > .describe > .describes > .describe';
+
 (function($) {
   $(Screw).bind('loaded', function() {
     $('.status').fn({
       display: function() {
-        $(this).text(
-          $('.passed').length + $('.failed').length + ' test(s), ' + $('.failed').length + ' failure(s)'
+        $(this).html(
+          $('.passed').length + $('.failed').length + ' finished, ' + $('.failed').length + ' failure(s), ' + '<br />' +
+          ((new Date() - Screw.suite_start_time)/1000.0).toString() + 
+		  ' seconds elapsed<br />' + 
+			$('.async').length + ' running asynchronous test(s) ' 
         );
       }
     });
@@ -47,7 +53,7 @@
         try {
           try {
             $(this).fn('parent').fn('run_befores');
-            $(this).data('screwunit.run')();
+            $(this).data('screwunit.run')($(this));
           } finally {
             $(this).fn('parent').fn('run_afters');
           }
@@ -81,7 +87,7 @@
     });
 
     $(Screw).trigger('before');
-    var to_run = unescape(location.search.slice(1)) || 'body > .describe > .describes > .describe';
+    var to_run = unescape(location.search.slice(1)) || Screw.Defaults.to_run;
     $(to_run)
       .focus()
       .eq(0).trigger('scroll').end()
