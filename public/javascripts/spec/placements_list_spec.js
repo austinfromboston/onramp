@@ -5,6 +5,9 @@ Screw.Unit( function() {
     if( $('#dom_test').length === 0 ) {
       $('body').append('<div id="dom_test"></div>');
     }
+    if( $('#async_dom_test').length === 0 ) {
+      $('body').append('<div id="async_dom_test"></div>');
+    }
     $('#dom_test').html( '<ol class="placements_list" id="test-items" data-section-id="5"><div class="reloadable"><div class="content"></div></div></ol>');
     list_selector = '#dom_test .placements_list';
     current_list = $( list_selector );
@@ -12,30 +15,35 @@ Screw.Unit( function() {
     current_list.fn( RD.placements_list() );
   });
 
+
   describe('refreshing the list', function() {
     before( function() {
+      current_list = $( '<ol class="placements_list" id="test-items" data-section-id="5"><div class="reloadable"><div class="content"></div></div></ol>');
+      $('#async_dom_test').append( current_list );
       current_list.fn( RD.placements_list( { 
-        source_url: function() { return '/javascripts/spec/fixtures/ajax_success.html' } } ));
+        source_url: function() { return '/javascripts/spec/fixtures/ajax_success.html' }, 
+        after_refresh: function() { $(this).attr('after_refreshed', true); }
+      } ));
     } );
 
     it('loads new data into reloadable', function( me ) {
-      var async_list = $(list_selector);
-      $(list_selector).fn('refresh');
+      var async_list = current_list;
+      current_list.fn('refresh');
       using(me).wait(1).and_then( function() { 
         expect( async_list.text()).to(equal, 'success'); 
       } );
     } );
 
     it('calls after_refresh once new data has loaded', function( me ) {
-      var async_list = current_list;
-      $( list_selector ).fn( RD.placements_list( { 
-        after_refresh: function() { async_list.after_refreshed = true; } } ));
-      async_list.fn('refresh');
+      var asynk_list = current_list;
+
+      $(asynk_list).fn('refresh');
       using(me).wait(1).and_then( function() { 
-        expect( async_list.after_refreshed ).to(be_true ); 
+        expect( $(asynk_list).attr('after_refreshed') ).to( be_true ); 
       } );
 
     } );
+      
     describe('highlighting new items', function() {
       before( function() {
         $( current_list.fn('content_selector')).html(   '<li id="placement_ids_1"></li>');

@@ -12,9 +12,9 @@ RD.placements_list = function( extension ) {
       return ' li[id^=placement_ids_]';
     },
     refresh: function( ) { 
-      //$.extend(this,self);
       $(this).fn('before_refresh');
-      $(".reloadable", this).load( this.source_url() + this.content_selector(), function() { self.after_refresh.apply(this) } );
+      var list = this;
+      $(".reloadable", this).load( $(this).fn('source_url') + $(this).fn('content_selector'), function() { $(list).fn('after_refresh') } );
     },
     items: function() {
       $.extend(this,self);
