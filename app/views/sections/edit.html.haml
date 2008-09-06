@@ -76,8 +76,8 @@
 
     //Refresh the content list
     $('#section-content').bind( 'refresh', function(ev) {
-      $('#section-content #top-items .reloadable').load( '/sections/' + RD.section.id + '/edit #top-items .content', RD.ui.initialize );
-      $('#section-content #recent-items .reloadable').load( '/sections/' + RD.section.id + '/edit #recent-items .content', RD.stacks.try('refresh') );
+      $.each( [ '#top-items', '#recent-items' ], function() { $(this).fn('refresh') } );
+      //$('#section-content #recent-items .reloadable').load( '/sections/' + RD.section.id + '/edit #recent-items .content', RD.stacks.try('refresh') );
     } );
 
     //Cancel button, new article and edit

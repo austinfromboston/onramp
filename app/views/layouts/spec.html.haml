@@ -4,19 +4,14 @@
     = controller.controller_name.titleize
     &mdash;
     = controller.action_name.titleize
-  = javascript_include_tag 'jquery/jquery-1.2.6.js'
-  = javascript_include_tag 'jquery/plugins/jquery.fn.js'
-  = javascript_include_tag 'screw/jquery.print.js'
-  = javascript_include_tag 'screw/screw.builder.js'
-  = javascript_include_tag 'screw/screw.matchers.js'
-  = javascript_include_tag 'screw/screw.events.js'
-  = javascript_include_tag 'screw/screw.behaviors.js'
+  = stylesheet_link_tag 'ui'
   = stylesheet_link_tag '../javascripts/screw/screw'
-  = js_spec params[:id] 
 
 %body{ :class => "#{controller.controller_name} #{controller.action_name}" }
-  %dom_test
+  #dom_test
 
+  = javascript_include_tag 'jquery/jquery-1.2.6.js'
+  = javascript_include_tag 'jquery/plugins/jquery.fn.js'
   = javascript_include_tag js_ui(:core)
   = javascript_include_tag js_ui(:sortable)
   = javascript_include_tag js_effect(:core)
@@ -30,4 +25,13 @@
   = javascript_include_tag 'ui'
   = javascript_include_tag 'sections'
   = javascript_include_tag 'section_content'
+  = javascript_include_tag 'placements_list'
+  = javascript_include_tag 'remote_form'
+
+  = javascript_include_tag 'screw/jquery.print.js'
+  = javascript_include_tag 'screw/screw.builder.js'
+  = javascript_include_tag 'screw/screw.matchers.js'
+  = javascript_include_tag 'screw/screw.events.js'
+  = javascript_include_tag 'screw/screw.behaviors.js'
+  = js_spec params[:id] 
 
