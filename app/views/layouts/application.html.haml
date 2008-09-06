@@ -38,9 +38,10 @@
   = javascript_include_tag 'ui'
   = javascript_include_tag 'sections'
   = javascript_include_tag 'section_content'
+  = javascript_include_tag 'placements_list'
+  = yield :javascript
 
   - unless params[:ui_test_id]
-    = yield :javascript
     - javascript_tag do
       $( function() {
       RD.ui.initialize();
@@ -54,5 +55,6 @@
     = javascript_include_tag 'screw/screw.matchers.js'
     = javascript_include_tag 'screw/screw.events.js'
     = javascript_include_tag 'screw/screw.behaviors.js'
+    = javascript_include_tag 'spec/spec_helper'
     = stylesheet_link_tag '../javascripts/screw/screw'
     = js_spec params[:ui_test_id] 

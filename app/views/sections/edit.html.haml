@@ -14,7 +14,7 @@
     .clear
 
     - ordered, unordered = @section.placements.partition { |p| p.list_order }
-    %ol#top-items.plain.section_placements.ui-block
+    %ol#top-items.plain.section_placements.ui-block{ 'data-section-id' => @section.id }
       %h6.info
         Top Items
       .clear
@@ -26,7 +26,7 @@
           - else
             %li
 
-    %ul#recent-items.plain.section_placements.ui-block
+    %ul#recent-items.plain.section_placements.ui-block{'data-section-id' => @section.id }
       %h6.info
         Recent Items
       .clear
@@ -46,7 +46,7 @@
       .clear
 
   .span-6
-    %ul#available-items.section_placements.ui-block.plain
+    %ul#available-items.section_placements.ui-block.plain{ 'data-section-id' => @section.id }
       %h6.info
         Add
       .clear

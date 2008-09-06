@@ -1,0 +1,33 @@
+!!!
+%head
+  %title
+    = controller.controller_name.titleize
+    &mdash;
+    = controller.action_name.titleize
+  = javascript_include_tag 'jquery/jquery-1.2.6.js'
+  = javascript_include_tag 'jquery/plugins/jquery.fn.js'
+  = javascript_include_tag 'screw/jquery.print.js'
+  = javascript_include_tag 'screw/screw.builder.js'
+  = javascript_include_tag 'screw/screw.matchers.js'
+  = javascript_include_tag 'screw/screw.events.js'
+  = javascript_include_tag 'screw/screw.behaviors.js'
+  = stylesheet_link_tag '../javascripts/screw/screw'
+  = js_spec params[:id] 
+
+%body{ :class => "#{controller.controller_name} #{controller.action_name}" }
+  %dom_test
+
+  = javascript_include_tag js_ui(:core)
+  = javascript_include_tag js_ui(:sortable)
+  = javascript_include_tag js_effect(:core)
+  = javascript_include_tag js_effect(:scale)
+  = javascript_include_tag js_effect(:shake)
+  = javascript_include_tag js_effect(:blind)
+  = javascript_include_tag js_effect(:highlight)
+  = javascript_include_tag js_effect(:transfer)
+  = javascript_include_tag 'tiny_mce/tiny_mce'
+  = javascript_include_tag 'application'
+  = javascript_include_tag 'ui'
+  = javascript_include_tag 'sections'
+  = javascript_include_tag 'section_content'
+
