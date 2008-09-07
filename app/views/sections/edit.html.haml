@@ -100,25 +100,14 @@
     } );
 
     //Edit or add an article
-    $('#section-content').click( function(ev) {
-      if( !$(ev.target).is('.edit,#add-article-button') ) { return true; }
-      if( $(ev.target).is('.edit') ) {
-        var article_inset = $(ev.target).parents('li[data-article-id]').eq(0).find('.edit-article-inset').eq(0);
-      } else {
-        var article_inset = $('#add-article-inset');
-        $(article_inset).parents('#add-article').removeClass('inactive');
-      }
-      if( $(article_inset).is(':visible')) { 
-        $(article_inset).hide('blind', {}, 2000 ); 
-        $(article_inset).parents('#add-article').addClass('inactive');
-        $(article_inset).parents('li[data-article-id]').find('.description').eq(0).show('blind');
-        return false;
-      }
-      RD.stacks.create('show_article_form', article_inset, function() {
-        $(this).parents('li[data-article-id]').find('.description').eq(0).hide('blind');
-        $(this).show('blind', {}, 2000 );
-      } );
-      $( '.remote_content', article_inset ).load( ev.target.href, RD.stacks.try('show_article_form'));
+    $('.placements_list .edit').livequery( 'click', function(ev) {
+      var article_inset = $(ev.target).parents('li[data-article-id]').eq(0).find('.edit-article-inset').eq(0);
+      $(article_inset).fn('edit');
+      return false;
+    } );
+    $('#add-article-button').livequery( 'click', function(ev) {
+      var article_inset = $('#add-article-inset');
+      $(article_inset).fn('new');
       return false;
     } );
     
