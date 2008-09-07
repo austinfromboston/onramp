@@ -17,14 +17,3 @@ RD.remote_form = function( extension ) {
   return self;
 };
 
-RD.article_inset = function( extension ) {
-  if ( extension === undefined ) { var extension = {}; }
-  var self = $.extend( {
-    after_submit: function( response ) {
-      $(this).hide( 1000 );
-      $('.remote_content', this ).html('');
-      $(this).parents('#add-article').addClass('inactive');
-    }
-  }, extension );
-  return self;
-};

@@ -93,20 +93,10 @@
     } );
 
     //Cancel button, new article and edit
-    $('#add-article-inset,.edit-article-inset').click( function(ev) {
-      if( !$(ev.target).is('.cancel') ) { return true; }
+    $('#add-article-inset .cancel,.edit-article-inset .cancel').livequery( 'click', function(ev) {
       var article_inset = $(ev.target).parents('#add-article-inset,.edit-article-inset').eq(0);
-      $(article_inset).hide(1200);
-      $(article_inset).queue( function() {
-        $('.remote_content', article_inset).html('');
-        $(this).dequeue();
-      } );
-      $(article_inset).queue( function() {
-        $(article_inset).parents('#add-article').addClass('inactive');
-        $(this).dequeue();
-      } );
+      article_inset.fn('cancel');
       return false;
-
     } );
 
     //Edit or add an article
