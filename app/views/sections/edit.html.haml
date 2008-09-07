@@ -14,7 +14,7 @@
     .clear
 
     - ordered, unordered = @section.placements.partition { |p| p.list_order }
-    %ol#top-items.plain.section_placements.ui-block{ 'data-section-id' => @section.id }
+    %ol#top-items.plain.placements_list.ui-block{ 'data-section-id' => @section.id }
       %h6.info
         Top Items
       .clear
@@ -26,7 +26,7 @@
           - else
             %li
 
-    %ul#recent-items.plain.section_placements.ui-block{'data-section-id' => @section.id }
+    %ul#recent-items.plain.placements_list.ui-block{'data-section-id' => @section.id }
       %h6.info
         Recent Items
       .clear
@@ -46,7 +46,7 @@
       .clear
 
   .span-6
-    %ul#available-items.section_placements.ui-block.plain{ 'data-section-id' => @section.id }
+    %ul#available-items.placements_list.ui-block.plain{ 'data-section-id' => @section.id }
       %h6.info
         Add
       .clear
@@ -74,10 +74,22 @@
     RD.auth_token = auth_token;
     var success_message = function(response) { RD.notify("success"); };
 
-    //Refresh the content list
-    $('#section-content').bind( 'refresh', function(ev) {
-      $.each( [ '#top-items', '#recent-items' ], function() { $(this).fn('refresh') } );
-      //$('#section-content #recent-items .reloadable').load( '/sections/' + RD.section.id + '/edit #recent-items .content', RD.stacks.try('refresh') );
+    //Article Submit
+    $('.placements_list').fn( RD.placements_list() );
+    $('#add-article-inset,.edit-article-inset').livequery( function() { $(this).fn( RD.article_inset() ); } );
+    $('#add-article-inset :submit,.edit-article-inset :submit').livequery( 'click', function(ev) {
+      var article_inset = $(ev.target).parents('#add-article-inset,.edit-article-inset').eq(0);
+      var placement_id = $(ev.target).parents('li[id^=placement_ids_]').attr('id');
+      $(ev.target.form).fn( RD.remote_form( {
+        response: function(response) {
+          $(article_inset).fn('after_submit', response );
+          $('.placements_list').each( function() { $(this).fn('refresh', placement_id ); } );
+          RD.notify('article saved');
+        }
+      } ));
+      $(ev.target.form).fn( 'submit', 'json' );
+
+      return false;
     } );
 
     //Cancel button, new article and edit
@@ -127,29 +139,6 @@
       return false;
     } );
 
-    //Article Submit
-    $('#add-article-inset,.edit-article-inset').click( function(ev) {
-    //$('#add-article-inset,.edit-article-inset').livequery( 'click', function(ev) {
-      if( !$(ev.target).is(':submit') ) { return true; }
-      var article_inset = $(ev.target).parents('#add-article-inset,.edit-article-inset').eq(0);
-      RD.stacks.create('submit', article_inset, function() {  $(this).hide( 1000 ); });
-      RD.stacks.submit.add( function() {  $('.remote_content', article_inset).html('') } );
-      RD.stacks.submit.add( function() {  $(article_inset).parents('#add-article').addClass('inactive'); } );
-
-      RD.interface.submit( {
-        form: $(ev.target.form),
-        callback: function( response ) {
-          //highlight the new item
-          var to_highlight = '#section-content li[data-article-id=' + response.article.id + ']';
-          RD.stacks.create('refresh', '#section-content', function() {  $( to_highlight ).show('puff', {}, 1000 ); });
-          RD.stacks.refresh.add( function() {  RD.notify('article saved'); });
-
-          RD.stacks.try('submit')();
-          $('#section-content').trigger('refresh');
-        }
-      } );
-      return false;
-    } );
 
     //Sortables for placement ordering
     //Update Top Items

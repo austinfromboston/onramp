@@ -56,9 +56,18 @@ Screw.Unit( function() {
         current_list.fn('before_refresh');
         expect( current_list.data('previous_items')).to(have_length, 2 );
       } );
+
+      it('marks items as new',  function() {
+        current_list.fn('before_refresh');
+        current_list.fn('mark_updated', 'placement_ids_2');
+        expect( current_list.data('previous_items')).to(have_length, 1 );
+      } );
+
       it('identifies new items after refresh',  function() {
         current_list.fn( RD.placements_list({ refresh: function() { 
           $(this).fn('before_refresh');
+          $( current_list.fn('content_selector')).html(   '<li id="placement_ids_1"></li>');
+          $( current_list.fn('content_selector')).append( '<li id="placement_ids_2"></li>');
           $( current_list.fn('content_selector')).append( '<li id="placement_ids_3"></li>');
         } } ));
         current_list.fn('refresh');
