@@ -18,8 +18,7 @@ RD.placements_list = function( extension ) {
       $(".reloadable", this).load( $(this).fn('source_url') + $(this).fn('content_selector'), function() { $(list).fn('after_refresh') } );
     },
     items: function() {
-      $.extend(this,self);
-      return $( this.content_selector() + this.items_selector() );
+      return $( $(this).fn('content_selector') + $(this).fn('items_selector') );
     },
     mark_updated:  function( id_to_mark ) {
       var existing = $(this).data('previous_items');
@@ -32,12 +31,25 @@ RD.placements_list = function( extension ) {
       return $.grep( $(this).fn('items'), function( item ) { return ( $.inArray( item.id, existing_ids ) === -1 ) });
     },
     before_refresh: function() {
-      $(this).data('previous_items', $(this).fn('items'));
+      //$(this).data('previous_items', $(this).fn('items'));
+      var existing = $(this).fn('items');
+      var to_save = $.grep($(existing), function(item) { if( !$(item).is('.updated') ) { return true; } } );
+      $(this).data('previous_items', to_save );
     },
     after_refresh: function() {
       var items = $(this).fn('new_items');
       if( items !== undefined ) { $(items).show('puff', {}, 1000 ); }
       RD.ui.initialize();
+    },
+    create_and_save: function() {
+      if ($('form.create_placement', this).length === 0 ) { return $(this).fn('save'); }
+      $('form.create_placement', this).trigger('submit');
+    },
+    save: function() {
+      var form = $('form.save_placements_list', this );
+      if( form.length === 0) { return false; }
+      $.post( form.attr('action'), form.serialize() + '&' + $(this).sortable( 'serialize' ), function() { $( '.placements_list:not(#available-items)' ).fn('refresh'); } );
+      
     }
   }, extension );
   return self;

@@ -18,25 +18,29 @@
       %h6.info
         Top Items
       .clear
+      - form_for :placement_orderings, :url => placement_orderings_path, :html => { :method => :put, :class => 'js-staging save_placements_list' } do |f|
+        &nbsp;
       .reloadable
         .content
           - if ordered and !ordered.empty?
             - for placement in ordered
               = render :partial => 'sections/list/placement', :locals => { :placement => placement }
           - else
-            %li
+            %li.placeholder
 
     %ul#recent-items.plain.placements_list.ui-block{'data-section-id' => @section.id }
       %h6.info
         Recent Items
       .clear
+      - form_for :placement_orderings, :url => placement_orderings_path, :html => { :method => :delete, :class => 'js-staging save_placements_list' } do |f|
+        &nbsp;
       .reloadable
         .content
           - if unordered and !unordered.empty?
             - for placement in unordered
               = render :partial => 'sections/list/placement', :locals => { :placement => placement }
           - else
-            %li
+            %li.placeholder
     
   -#= link_to "new", new_section_article_path(:section_id => @section ), :class => 'add button'
   -#.span-3.prepend-3
@@ -54,7 +58,7 @@
         = f.select "article_id", article_options( :exclude_section => @section ), {}, :id => 'add_article_select'
         = f.hidden_field "list_order"
         = f.hidden_field "section_id"
-        = f.submit "Add" #, :id => 'create-placement-button', :class => 'remote_create_placement'
+        = f.submit "Add" 
 
       - form_tag section_available_articles_path(:section_id => @section ), :method => :get, :class => 'js-only', :id => 'available-search-form' do
         = text_field_tag "query[fulltext]", params[:query] || "Search", :class => 'large', :id => 'articles-search'
@@ -62,6 +66,7 @@
 
       .reloadable.js-only
         .content
+          %li.placeholder
           
 
 
@@ -79,11 +84,11 @@
     $('#add-article-inset,.edit-article-inset').livequery( function() { $(this).fn( RD.article_inset() ); } );
     $('#add-article-inset :submit,.edit-article-inset :submit').livequery( 'click', function(ev) {
       var article_inset = $(ev.target).parents('#add-article-inset,.edit-article-inset').eq(0);
-      var placement_id = $(ev.target).parents('li[id^=placement_ids_]').attr('id');
+      $(ev.target).parents('li[id^=placement_ids_]').addClass('updated');
       $(ev.target.form).fn( RD.remote_form( {
         response: function(response) {
           $(article_inset).fn('after_submit', response );
-          $('.placements_list').each( function() { $(this).fn('refresh', placement_id ); } );
+          $('.placements_list').each( function() { $(this).fn('refresh'); } );
           RD.notify('article saved');
         }
       } ));
@@ -99,12 +104,14 @@
       return false;
     } );
 
-    //Edit or add an article
+    //Show edit form
     $('.placements_list .edit').livequery( 'click', function(ev) {
       var article_inset = $(ev.target).parents('li[data-article-id]').eq(0).find('.edit-article-inset').eq(0);
       $(article_inset).fn('edit');
       return false;
     } );
+
+    //Show add form
     $('#add-article-button').livequery( 'click', function(ev) {
       var article_inset = $('#add-article-inset');
       $(article_inset).fn('new');
@@ -118,6 +125,18 @@
       return false;
     } );
 
+    //create placements
+    $('form.create_placement').livequery( 'submit', function(ev) {
+      var form = this;
+      $(this).fn( RD.remote_form( { response: function( response ) {
+        $(form).parents('.new_placement').eq(0).addClass('updated').removeClass('new_placement').attr('id', 'placement_ids_' + response.placement.id );
+        $(form).parents('.placements_list').fn('save');
+        $(form).remove();
+      }} ));
+      $(this).fn('submit', 'json');
+      return false;
+    });
+
 
     //Sortables for placement ordering
     //Update Top Items
@@ -127,19 +146,11 @@
       opacity: .7,
       items: '.content > li',
       containment: '#section-content',
-      update: function(ev) { 
-        //$('#top-items')[0].list.create_any_pending_and_save();
-        console.log('change to top');
-        if( RD.placements.is_pending('#top-items')) {
-          RD.placements.create_pending('#top-items');
-        } else {
-          RD.placements.save_order('#top-items');
-        }
+      update: function(ev, ui) { 
+        if(ui.sender !== null ) { $('#top-items').fn('create_and_save'); };
       },
       connectWith: [ "#recent-items", '#available-items' ]
     });
-
-    RD.create_placement_list('#top-items');
 
     //Update Recent Items
     $('#recent-items').sortable( { 
@@ -147,13 +158,8 @@
       items: '.content > li',
       containment: '#section-content',
       connectWith: [ '#top-items','#available-items' ], 
-      update: function(ev) { 
-        console.log('change to recent');
-        if( RD.placements.is_pending('#recent-items')) {
-          RD.placements.create_pending('#recent-items');
-        } else {
-          RD.placements.default_order('#recent-items');
-        }
+      update: function(ev, ui) { 
+        if(ui.sender !== null ) { $('#recent-items').fn('create_and_save'); };
       }
     } );
 
@@ -165,7 +171,7 @@
       connectWith: [ '#top-items', '#recent-items' ], 
       update: function(ev) { 
         console.log('change to available');
-        //$.post( '/placement_orderings', '_method=delete&authenticity_token=' + auth_token + '&' + $('#recent-items').sortable( 'serialize' ), function() { $('#recent-items,#top-items').trigger('ready') } );
+        $('#available-items form.destroy_placement').each( function() { $(this).trigger('submit'); } );
       }
     } );
 
@@ -179,21 +185,25 @@
     } );
 
     //New Placement
+    $('#create-placement').fn( RD.remote_form( { response: function( response ) {
+      $('.placements_list').each( function() { $(this).fn('refresh'); } );
+    }} ) );
     $('#create-placement').submit( function(ev) {
-      //if( !$(ev.target).is(':submit')) { return true; }
-      RD.interface.submit( {
-        form: $(ev.target),
-        callback: function( response ) {
-          var to_highlight = '#section-content li[data-article-id=' + response.placement.article_id + ']';
-          RD.stacks.create('refresh', '#section-content', function() {  
-            if( $( to_highlight ).is(':visible')) { $(to_highlight).hide();  }
-            $( to_highlight ).show('puff', {}, 1000 ); 
-          });
-          RD.stacks.refresh.add( function() {  RD.notify('article added'); });
-          $('#section-content').trigger('refresh');
-        }
-      });
+      $(this).fn('submit','json');
       return false;
     } );
+
+    //Delete Placement
+    $('.destroy_placement').livequery( 'submit', function(ev) {
+      
+      $(this).fn(RD.remote_form( { response: function() {
+        var item = $(ev.target).parents('li[id^=placement_ids]').eq(0);
+        item.hide('puff');
+        item.queue( function() { $(this).remove(); $(this).dequeue(); } );
+        //$(ev.target).parents('li[id^=placement_ids]').eq(0).hide('puff').remove();
+      } } ));
+      $(this).fn('submit', 'json');
+      return false;
+    });
     
 

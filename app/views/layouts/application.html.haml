@@ -18,6 +18,10 @@
   #container.span-24{ :class => params[:ui_test_id] ? 'js-staging' : '' }
     #header.container
       = render 'layouts/menu'
+      .flash-notice
+        = flash[:notice]
+      .flash-error
+        = flash[:error]
       #ajax_message.inactive.js-only
     #main.container
       = yield
