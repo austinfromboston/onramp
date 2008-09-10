@@ -1,4 +1,5 @@
-//if( RD === undefined ) { var RD = function() { return { }; }; }
+var RD = RD || {};
+
 RD.placements_list = function( extension ) {
   if ( extension === undefined ) { var extension = {}; }
   var self = $.extend( {
@@ -10,6 +11,12 @@ RD.placements_list = function( extension ) {
     },
     items_selector: function() {
       return ' li[id^=placement_ids_]';
+    },
+    is_receiver: function(item) {
+      return ( $( item ).parents('.ui-sortable').is('#'+$(this).attr('id')));
+    },
+    is_origin: function() {
+      return ( $( '#' + $(this).attr('id') + ' .ui-sortable-helper').length > 0 );
     },
     refresh: function( updated ) { 
       $(this).fn('before_refresh');

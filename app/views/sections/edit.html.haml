@@ -73,12 +73,7 @@
   #remote-staging.js-staging
 
 - content_for :dom_ready do
-  = "var auth_token = '#{form_authenticity_token}'"
-  = "RD.section = #{@section.to_json}.section;"
   :plain
-    RD.auth_token = auth_token;
-    var success_message = function(response) { RD.notify("success"); };
-
     //Article Submit
     $('.placements_list').fn( RD.placements_list() );
     $('#add-article-inset,.edit-article-inset').livequery( function() { $(this).fn( RD.article_inset() ); } );
@@ -147,7 +142,9 @@
       items: '.content > li',
       containment: '#section-content',
       update: function(ev, ui) { 
-        if(ui.sender !== null ) { $('#top-items').fn('create_and_save'); };
+        if( $('#top-items').fn('is_receiver', ui.item )) {
+          $('#top-items').fn('create_and_save'); 
+        }
       },
       connectWith: [ "#recent-items", '#available-items' ]
     });
@@ -159,7 +156,9 @@
       containment: '#section-content',
       connectWith: [ '#top-items','#available-items' ], 
       update: function(ev, ui) { 
-        if(ui.sender !== null ) { $('#recent-items').fn('create_and_save'); };
+        if( $('#recent-items').fn('is_receiver', ui.item )) {
+          $('#recent-items').fn('create_and_save'); 
+        }
       }
     } );
 
@@ -170,7 +169,6 @@
       containment: '#section-content',
       connectWith: [ '#top-items', '#recent-items' ], 
       update: function(ev) { 
-        console.log('change to available');
         $('#available-items form.destroy_placement').each( function() { $(this).trigger('submit'); } );
       }
     } );
