@@ -4,6 +4,7 @@ RD.remote_form = function( extension ) {
   var self = $.extend( {
     submit: function( format ) {
       var request_format = '';
+      tinyMCE.triggerSave();
       if( format === undefined ) { request_format = ''; };
       if( format === 'json' ) { request_format = '.js'; };
       var url = $(this).attr('action') + request_format;

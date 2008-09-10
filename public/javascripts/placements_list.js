@@ -39,7 +39,7 @@ RD.placements_list = function( extension ) {
     after_refresh: function() {
       var items = $(this).fn('new_items');
       if( items !== undefined ) { $(items).show('puff', {}, 1000 ); }
-      RD.ui.initialize();
+      $('body').trigger('dom.updated');
     },
     create_and_save: function() {
       if ($('form.create_placement', this).length === 0 ) { return $(this).fn('save'); }

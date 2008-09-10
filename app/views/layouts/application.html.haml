@@ -4,18 +4,17 @@
     = controller.controller_name.titleize
     &mdash;
     = controller.action_name.titleize
-  - unless params[:ui_test_id]
-    = stylesheet_link_tag 'blueprint/print', :media => 'print'
-    = stylesheet_link_tag 'blueprint/screen', :media => 'screen, projection'
-    <!--[if IE]>
-    = stylesheet_link_tag 'blueprint/ie'
-    <![endif]-->
-    = stylesheet_link_tag 'application'
-    = stylesheet_link_tag 'forms'
+  = stylesheet_link_tag 'blueprint/print', :media => 'print'
+  = stylesheet_link_tag 'blueprint/screen', :media => 'screen, projection'
+  <!--[if IE]>
+  = stylesheet_link_tag 'blueprint/ie'
+  <![endif]-->
+  = stylesheet_link_tag 'application'
+  = stylesheet_link_tag 'forms'
   = stylesheet_link_tag 'ui'
 
 %body{ :class => "#{controller.controller_name} #{controller.action_name}" }
-  #container.span-24{ :class => params[:ui_test_id] ? 'js-staging' : '' }
+  #container.span-24
     #header.container
       = render 'layouts/menu'
       .flash-notice
@@ -40,28 +39,20 @@
   = javascript_include_tag js_effect(:transfer)
   = javascript_include_tag 'tiny_mce/tiny_mce'
   = javascript_include_tag 'application'
-  = javascript_include_tag 'ui'
-  = javascript_include_tag 'sections'
-  = javascript_include_tag 'section_content'
+  = javascript_include_tag 'messages'
+  -#= javascript_include_tag 'sections'
+  -#= javascript_include_tag 'section_content'
   = javascript_include_tag 'placements_list'
   = javascript_include_tag 'remote_form'
   = javascript_include_tag 'article_inset'
   = yield :javascript
 
-  - unless params[:ui_test_id]
-    - javascript_tag do
-      $( function() {
-      RD.ui.initialize();
-      $('body').ajaxError( function(ev, req, options, error ) { RD.notify('problem') } );
-      = yield :dom_ready
-      } );
-  - else
-    #dom_test
-    = javascript_include_tag 'screw/jquery.print.js'
-    = javascript_include_tag 'screw/screw.builder.js'
-    = javascript_include_tag 'screw/screw.matchers.js'
-    = javascript_include_tag 'screw/screw.events.js'
-    = javascript_include_tag 'screw/screw.behaviors.js'
-    = javascript_include_tag 'spec/spec_helper'
-    = stylesheet_link_tag '../javascripts/screw/screw'
-    = js_spec params[:ui_test_id] 
+  - javascript_tag do
+    $('body').bind('dom.updated', RD.dom_updated );
+    $( function() {
+    $('body').ajaxError( function(ev, req, options, error ) { RD.notify('problem') } );
+    = yield :dom_ready
+    $('body').trigger('dom.updated');
+    //window.setTimeout( function() { window.tinyMCE.init( RD.tinymce_config )}, 3000 );
+    } );
+

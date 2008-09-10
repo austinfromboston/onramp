@@ -175,15 +175,6 @@
       }
     } );
 
-    //Refresh ordered lists
-    $('#recent-items,#top-items').bind('ready', function(ev) {
-      $('.content li:empty', this).remove();
-      if( $('.content li', this).length === 0 ){
-        $('.content', this).html('<li></li>');
-      }
-      RD.ui.initialize();
-    } );
-
     //New Placement
     $('#create-placement').fn( RD.remote_form( { response: function( response ) {
       $('.placements_list').each( function() { $(this).fn('refresh'); } );

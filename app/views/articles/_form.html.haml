@@ -8,8 +8,8 @@
   = f.label :blurb, "Summary for lists"
   = f.text_area :blurb, :class => 'minor'
 %p
-  = f.label :body_html, "Body"
-  = f.text_area :body_html, :class => 'fullpage tiny_mce'
+  = f.label :body_html, "Body", :for => "article_body_html_#{f.object.id}"
+  = f.text_area :body_html, :class => 'fullpage tiny_mce', :id => "article_body_html_#{f.object.id}"
 %p
   = f.label :status
   = f.select :status, Article::STATUSES
