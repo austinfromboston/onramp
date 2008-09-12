@@ -11,6 +11,7 @@ RD.remote_form = function( extension ) {
       var data = $(this).serialize();
       var form = this;
       $.post( url, data, function(response) { $(form).fn('response', response )}, format  );
+      return false;
     },
     response: function( response ) {
     }

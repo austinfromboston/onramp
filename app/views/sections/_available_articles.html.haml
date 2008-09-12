@@ -1,0 +1,36 @@
+.span-6
+  .ui-block
+    %h6.info
+      Add
+    .clear
+    - form_for section.placements.build, :html => {:class => 'js-hide permanent create_placement' } do |f|
+      = f.select "article_id", article_options( :exclude_section => section ), {}, :id => 'add_article_select'
+      = f.hidden_field "list_order"
+      = f.hidden_field "section_id"
+      = f.submit "Add" 
+
+    %ul#available-items.placements_list.plain{ 'data-section-id' => section.id }
+      - form_tag section_available_articles_path(:section_id => section ), :method => :get, :class => 'js-only', :id => 'available-search-form' do
+        = text_field_tag "query[fulltext]", params[:query] || "Search", :class => 'large', :id => 'articles-search'
+        = submit_tag "Go", :class => 'js-staging'
+
+      .reloadable.js-only
+        .content
+          %li.placeholder
+          
+
+- content_for :dom_ready do
+  :plain
+    //Article Search
+    $('#available-search-form').submit( function(ev) {
+      $('#available-items .content').html('');
+      $('#available-items .reloadable').load( $(ev.target).attr('action') + '?' + $(ev.target).serialize() + ' .content' );
+      return false;
+    } );
+
+    //create placements
+    $('form.create_placement').livequery( 'submit', function(ev) {
+      RD.placement_form.setup_create( ev.target );
+      return $(ev.target).fn('submit', 'json');
+    });
+

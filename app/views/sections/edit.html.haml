@@ -13,69 +13,13 @@
         .remote_content
     .clear
 
-    - ordered, unordered = @section.placements.partition { |p| p.list_order }
-    %ol#top-items.plain.placements_list.ui-block{ 'data-section-id' => @section.id }
-      %h6.info
-        Top Items
-      .clear
-      - form_for :placement_orderings, :url => placement_orderings_path, :html => { :method => :put, :class => 'js-staging save_placements_list' } do |f|
-        &nbsp;
-      .reloadable
-        .content
-          - if ordered and !ordered.empty?
-            - for placement in ordered
-              = render :partial => 'sections/list/placement', :locals => { :placement => placement }
-          - else
-            %li.placeholder
+    = render :partial => 'placements', :locals => { :placements => @section.placements, :section => @section }  
 
-    %ul#recent-items.plain.placements_list.ui-block{'data-section-id' => @section.id }
-      %h6.info
-        Recent Items
-      .clear
-      - form_for :placement_orderings, :url => placement_orderings_path, :html => { :method => :delete, :class => 'js-staging save_placements_list' } do |f|
-        &nbsp;
-      .reloadable
-        .content
-          - if unordered and !unordered.empty?
-            - for placement in unordered
-              = render :partial => 'sections/list/placement', :locals => { :placement => placement }
-          - else
-            %li.placeholder
-    
-  -#= link_to "new", new_section_article_path(:section_id => @section ), :class => 'add button'
-  -#.span-3.prepend-3
-    %ul#remove-items.plain.ui-block
-      %h6#remove-title.info
-        Remove
-      .clear
-
-  .span-6
-    %ul#available-items.placements_list.ui-block.plain{ 'data-section-id' => @section.id }
-      %h6.info
-        Add
-      .clear
-      - form_for @section.placements.build, :html => {:class => 'js-hide', :id => 'create-placement' } do |f|
-        = f.select "article_id", article_options( :exclude_section => @section ), {}, :id => 'add_article_select'
-        = f.hidden_field "list_order"
-        = f.hidden_field "section_id"
-        = f.submit "Add" 
-
-      - form_tag section_available_articles_path(:section_id => @section ), :method => :get, :class => 'js-only', :id => 'available-search-form' do
-        = text_field_tag "query[fulltext]", params[:query] || "Search", :class => 'large', :id => 'articles-search'
-        = submit_tag "Go", :class => 'js-staging'
-
-      .reloadable.js-only
-        .content
-          %li.placeholder
-          
-
-
-  #remote-staging.js-staging
+  = render :partial => 'available_articles', :locals => { :section => @section }
 
 - content_for :dom_ready do
   :plain
     //Article Submit
-    $('.placements_list').fn( RD.placements_list() );
     $('#add-article-inset,.edit-article-inset').livequery( function() { $(this).fn( RD.article_inset() ); } );
     $('#add-article-inset :submit,.edit-article-inset :submit').livequery( 'click', function(ev) {
       var article_inset = $(ev.target).parents('#add-article-inset,.edit-article-inset').eq(0);
@@ -91,6 +35,21 @@
 
       return false;
     } );
+
+    //Delete Placement
+    $('.destroy_placement').livequery( 'submit', function(ev) {
+      
+      $(this).fn(RD.remote_form( { response: function() {
+        var item = $(ev.target).parents('li[id^=placement_ids]').eq(0);
+        item.hide('puff');
+        item.queue( function() { $(this).remove(); $(this).dequeue(); } );
+        //$(ev.target).parents('li[id^=placement_ids]').eq(0).hide('puff').remove();
+      } } ));
+      $(this).fn('submit', 'json');
+      return false;
+    });
+    
+
 
     //Cancel button, new article and edit
     $('#add-article-inset .cancel,.edit-article-inset .cancel').livequery( 'click', function(ev) {
@@ -112,87 +71,5 @@
       $(article_inset).fn('new');
       return false;
     } );
-    
-    //Article Search
-    $('#available-search-form').submit( function(ev) {
-      $('#available-items .content').html('');
-      $('#available-items .reloadable').load( $(ev.target).attr('action') + '?' + $(ev.target).serialize() + ' .content' );
-      return false;
-    } );
-
-    //create placements
-    $('form.create_placement').livequery( 'submit', function(ev) {
-      var form = this;
-      $(this).fn( RD.remote_form( { response: function( response ) {
-        $(form).parents('.new_placement').eq(0).addClass('updated').removeClass('new_placement').attr('id', 'placement_ids_' + response.placement.id );
-        $(form).parents('.placements_list').fn('save');
-        $(form).remove();
-      }} ));
-      $(this).fn('submit', 'json');
-      return false;
-    });
-
-
-    //Sortables for placement ordering
-    //Update Top Items
-    $('#top-items').sortable({ 
-      tolerance: 'intersect',
-      placeholder: 'shadow-droppable',
-      opacity: .7,
-      items: '.content > li',
-      containment: '#section-content',
-      update: function(ev, ui) { 
-        if( $('#top-items').fn('is_receiver', ui.item )) {
-          $('#top-items').fn('create_and_save'); 
-        }
-      },
-      connectWith: [ "#recent-items", '#available-items' ]
-    });
-
-    //Update Recent Items
-    $('#recent-items').sortable( { 
-      placeholder: 'shadow-droppable',
-      items: '.content > li',
-      containment: '#section-content',
-      connectWith: [ '#top-items','#available-items' ], 
-      update: function(ev, ui) { 
-        if( $('#recent-items').fn('is_receiver', ui.item )) {
-          $('#recent-items').fn('create_and_save'); 
-        }
-      }
-    } );
-
-    //Update Available Items
-    $('#available-items').sortable( { 
-      placeholder: 'shadow-droppable',
-      items: '.content > li',
-      containment: '#section-content',
-      connectWith: [ '#top-items', '#recent-items' ], 
-      update: function(ev) { 
-        $('#available-items form.destroy_placement').each( function() { $(this).trigger('submit'); } );
-      }
-    } );
-
-    //New Placement
-    $('#create-placement').fn( RD.remote_form( { response: function( response ) {
-      $('.placements_list').each( function() { $(this).fn('refresh'); } );
-    }} ) );
-    $('#create-placement').submit( function(ev) {
-      $(this).fn('submit','json');
-      return false;
-    } );
-
-    //Delete Placement
-    $('.destroy_placement').livequery( 'submit', function(ev) {
-      
-      $(this).fn(RD.remote_form( { response: function() {
-        var item = $(ev.target).parents('li[id^=placement_ids]').eq(0);
-        item.hide('puff');
-        item.queue( function() { $(this).remove(); $(this).dequeue(); } );
-        //$(ev.target).parents('li[id^=placement_ids]').eq(0).hide('puff').remove();
-      } } ));
-      $(this).fn('submit', 'json');
-      return false;
-    });
     
 

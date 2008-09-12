@@ -50,16 +50,16 @@ Screw.Unit( function() {
         $( current_list.fn('content_selector')).append( '<li id="placement_ids_2"></li>');
       });
       it('should be all items before refresh', function() {
-        //expect(current_list.fn('new_items')).to(have_length, 2 );
+        expect(current_list.fn('new_items')).to(have_length, 2 );
       } );
       it('stores existing items before refresh', function() {
         current_list.fn('before_refresh');
         expect( current_list.data('previous_items')).to(have_length, 2 );
       } );
 
-      it('marks items as new',  function() {
+      it('does not include .updated items in the previous count',  function() {
+        $('#placement_ids_2').addClass('updated');
         current_list.fn('before_refresh');
-        current_list.fn('mark_updated', 'placement_ids_2');
         expect( current_list.data('previous_items')).to(have_length, 1 );
       } );
 

@@ -18,30 +18,23 @@ RD.placements_list = function( extension ) {
     is_origin: function() {
       return ( $( '#' + $(this).attr('id') + ' .ui-sortable-helper').length > 0 );
     },
-    refresh: function( updated ) { 
+    refresh: function( ) { 
       $(this).fn('before_refresh');
-      if( updated !== undefined ) { $(this).fn('mark_updated', updated ); }
       var list = this;
       $(".reloadable", this).load( $(this).fn('source_url') + $(this).fn('content_selector'), function() { $(list).fn('after_refresh') } );
     },
     items: function() {
       return $( $(this).fn('content_selector') + $(this).fn('items_selector') );
     },
-    mark_updated:  function( id_to_mark ) {
-      var existing = $(this).data('previous_items');
-      var updated = $.grep($(existing), function(item) { if( item.id !== id_to_mark ) { return true; } } );
-      $(this).data('previous_items', updated);
-    },
     new_items: function() {
       if( $(this).data('previous_items') === undefined ) { return $(this).fn('items'); }
       var existing_ids = $($(this).data('previous_items')).map( function() { return this.id } );;
-      return $.grep( $(this).fn('items'), function( item ) { return ( $.inArray( item.id, existing_ids ) === -1 ) });
+      if(!existing_ids) { return $(this).fn('items'); }
+      return $(this).fn('items').not( '#' + $.makeArray(existing_ids).join(',#') );
+      //return $.grep( $(this).fn('items'), function( item ) { return ( $.inArray( item.id, existing_ids ) === -1 ) });
     },
     before_refresh: function() {
-      //$(this).data('previous_items', $(this).fn('items'));
-      var existing = $(this).fn('items');
-      var to_save = $.grep($(existing), function(item) { if( !$(item).is('.updated') ) { return true; } } );
-      $(this).data('previous_items', to_save );
+      $(this).data('previous_items', $(this).fn('items').not('.updated'));
     },
     after_refresh: function() {
       var items = $(this).fn('new_items');
@@ -56,6 +49,25 @@ RD.placements_list = function( extension ) {
       var form = $('form.save_placements_list', this );
       if( form.length === 0) { return false; }
       $.post( form.attr('action'), form.serialize() + '&' + $(this).sortable( 'serialize' ), function() { $( '.placements_list:not(#available-items)' ).fn('refresh'); } );
+      
+    },
+    setup_sortable: function( ext ) {
+      var el = this;
+      if(ext === undefined ) { var ext = {} };
+      var default_options = {
+        tolerance: 'intersect',
+        placeholder: 'shadow-droppable',
+        opacity: .7,
+        items: '.content > li',
+        containment: '#section-content',
+        connectWith: [ ".placements_list" ],
+        update: function(ev, ui) { 
+          if( $(el).fn('is_receiver', ui.item )) {
+            $(el).fn('create_and_save'); 
+          }
+        }
+      };
+      $(this).sortable( $.extend( default_options, ext )); 
       
     }
   }, extension );

@@ -1,0 +1,38 @@
+- ordered, unordered = placements.partition { |p| p.list_order }
+%ol#top-items.plain.placements_list.ui-block{ 'data-section-id' => section.id }
+  %h6.info
+    Top Items
+  .clear
+  - form_for :placement_orderings, :url => placement_orderings_path, :html => { :method => :put, :class => 'js-staging save_placements_list' } do |f|
+    &nbsp;
+  .reloadable
+    .content
+      - if ordered and !ordered.empty?
+        - for placement in ordered
+          = render :partial => 'sections/list/placement', :locals => { :placement => placement }
+      - else
+        %li.placeholder
+
+%ul#recent-items.plain.placements_list.ui-block{'data-section-id' => section.id }
+  %h6.info
+    Recent Items
+  .clear
+  - form_for :placement_orderings, :url => placement_orderings_path, :html => { :method => :delete, :class => 'js-staging save_placements_list' } do |f|
+    &nbsp;
+  .reloadable
+    .content
+      - if unordered and !unordered.empty?
+        - for placement in unordered
+          = render :partial => 'sections/list/placement', :locals => { :placement => placement }
+      - else
+        %li.placeholder
+
+- content_for :dom_ready do
+  :plain
+    //Sortables for placement ordering
+    $('.placements_list').fn( RD.placements_list() );
+    $('#top-items').fn('setup_sortable') ;
+    $('#recent-items').fn('setup_sortable') ;
+    $('#available-items').fn( 'setup_sortable', { update: function(ev) { 
+        $('#available-items form.destroy_placement').each( function() { $(this).trigger('submit'); } );
+    }});
