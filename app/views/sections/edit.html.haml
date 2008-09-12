@@ -37,39 +37,20 @@
     } );
 
     //Delete Placement
-    $('.destroy_placement').livequery( 'submit', function(ev) {
-      
-      $(this).fn(RD.remote_form( { response: function() {
-        var item = $(ev.target).parents('li[id^=placement_ids]').eq(0);
-        item.hide('puff');
-        item.queue( function() { $(this).remove(); $(this).dequeue(); } );
-        //$(ev.target).parents('li[id^=placement_ids]').eq(0).hide('puff').remove();
-      } } ));
-      $(this).fn('submit', 'json');
-      return false;
-    });
-    
-
+    RD.placement_form.setup_destroy('.destroy_placement');
 
     //Cancel button, new article and edit
     $('#add-article-inset .cancel,.edit-article-inset .cancel').livequery( 'click', function(ev) {
-      var article_inset = $(ev.target).parents('#add-article-inset,.edit-article-inset').eq(0);
-      article_inset.fn('cancel');
-      return false;
+      return $(ev.target).parents('#add-article-inset,.edit-article-inset').fn('cancel');
     } );
 
     //Show edit form
     $('.placements_list .edit').livequery( 'click', function(ev) {
-      var article_inset = $(ev.target).parents('li[data-article-id]').eq(0).find('.edit-article-inset').eq(0);
-      $(article_inset).fn('edit');
-      return false;
+      return $(ev.target).parents('li[data-article-id]').eq(0).find('.edit-article-inset').fn('edit');
     } );
 
     //Show add form
     $('#add-article-button').livequery( 'click', function(ev) {
-      var article_inset = $('#add-article-inset');
-      $(article_inset).fn('new');
-      return false;
+      return $('#add-article-inset').fn('new');
     } );
     
-

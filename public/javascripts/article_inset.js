@@ -29,12 +29,14 @@ RD.article_inset = function( extension ) {
       if( $(this).is(':visible') ) { return $(this).fn('cancel'); }
       var scope = this;
       $( '.remote_content', this).load( $('.edit', this).attr('href'), function() { $(scope).fn('show_form'); } );
+      return false;
     },
     new: function() {
       if( $(this).is(':visible') ) { return $(this).fn('cancel'); }
       $(this).parents('#add-article').removeClass('inactive');
       var scope = this;
       $( '.remote_content', this).load( $('#add-article-button').attr('href'), function() { $(scope).fn('show_form'); } );
+      return false;
     }
   }, extension );
   return self;

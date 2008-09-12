@@ -15,5 +15,18 @@ RD.placement_form = {
       $('.placements_list').each( function() { $(this).fn('refresh'); } );
     }
     if(!$(this).is('.permanent')) { $(this).remove(); }
+  },
+
+  setup_destroy: function( selector ) {
+    $( selector ).livequery( 'submit', function(ev) {
+      var scope = ev.target;
+      $(ev.target).fn(RD.remote_form( { response: function( response ) {
+        var container = $(scope).parents('li[id^=placement_ids]').eq(0);
+        container.hide('puff');
+        container.queue( function() { $(this).remove(); $(this).dequeue(); } );
+      } } ));
+      $(ev.target).fn('submit', 'json');
+      return false;
+    });
   }
 };
