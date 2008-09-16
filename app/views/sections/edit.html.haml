@@ -19,27 +19,39 @@
 
 - content_for :dom_ready do
   :plain
-    //Article Submit
+    //Extend article insets on this page
     $('#add-article-inset,.edit-article-inset').livequery( function() { $(this).fn( RD.article_inset() ); } );
+
+    //Setup ajax article submit
     $('#add-article-inset :submit,.edit-article-inset :submit').livequery( 'click', function(ev) {
+
+      //find the container that is an inset
       var article_inset = $(ev.target).parents('#add-article-inset,.edit-article-inset').eq(0);
+
+      //find a placement list item parent and mark it as updated ( for edit )
       $(ev.target).parents('li[id^=placement_ids_]').addClass('updated');
+
+      //enable the form for ajax and add a custom response method
       $(ev.target.form).fn( RD.remote_form( {
         response: function(response) {
+          //trigger the after submit callback for the active article inset
           $(article_inset).fn('after_submit', response );
+          //refresh all placement lists on the page
           $('.placements_list').each( function() { $(this).fn('refresh'); } );
+          //show the user a success message
           RD.notify('article saved');
         }
       } ));
-      $(ev.target.form).fn( 'submit', 'json' );
 
-      return false;
+      //submit the form via ajax
+      return $(ev.target.form).fn( 'submit', 'json' );
+
     } );
 
     //Delete Placement
     RD.placement_form.setup_destroy('.destroy_placement');
 
-    //Cancel button, new article and edit
+    //Cancel button, new article and edit article forms
     $('#add-article-inset .cancel,.edit-article-inset .cancel').livequery( 'click', function(ev) {
       return $(ev.target).parents('#add-article-inset,.edit-article-inset').fn('cancel');
     } );

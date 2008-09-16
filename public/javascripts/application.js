@@ -1,5 +1,9 @@
-if( RD === undefined ) { var RD = {}; }
+//define the global RD object unless it already exists
+var RD = RD || {};
 
+//attached to the dom:updated event
+//shows all js-dependent items that are hidden via CSS
+//hides any items that should not be shown by converting their class to js-hidden
 RD.dom_updated = function() {
   $( '.js-only' ).removeClass('js-only');
   $( '.js-hide' ).addClass('js-hidden').removeClass('js-hide');
@@ -7,12 +11,15 @@ RD.dom_updated = function() {
 }
 
 
+//Initializes all visible wysiwyg editors with the class tiny_mce
 RD.load_wysiwyg = function() { 
   window.tinyMCE.init( RD.tinymce_config );
   $('.tiny_mce:visible').each( function() {
     tinyMCE.execCommand( 'mceAddControl', false, $(this).attr('id') );
   });
 };
+
+//default configuration for wysiwyg editor
 RD.tinymce_config = { 
   mode: 'none',
   theme: "advanced", 
